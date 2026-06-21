@@ -71,6 +71,8 @@ let appointments = [];
 let payments = [];
 let bills = [];
 let sessionRecords = [];
+let packages = [];
+let certificates = [];
 
 const BILL_CATEGORIES = ['Aluguel','Água','Luz','Internet','Telefone','Material de consultório','Supervisão','Assinaturas/Software','Impostos','Outros'];
 
@@ -208,17 +210,19 @@ async function loadAllData(){
   const rangeFrom = isoDate(addDays(monday, -28)); // ~1 mês de histórico
   const rangeTo = isoDate(addDays(monday, (RECURRENCE_WEEKS_AHEAD + 2) * 7));
 
-  const [clientsData, apptsData, paymentsData, billsData] = await Promise.all([
+  const [clientsData, apptsData, paymentsData, billsData, packagesData] = await Promise.all([
     db.loadClients(),
     db.loadAppointments(rangeFrom, rangeTo),
     db.loadPayments(currentReferenceMonthISO()),
     db.loadBills(),
+    db.loadPackages(),
   ]);
 
   clients = clientsData;
   appointments = apptsData;
   payments = paymentsData;
   bills = billsData;
+  packages = packagesData;
 
   await ensureUpcomingAppointments();
   await ensureUpcomingBillOccurrences();
@@ -248,6 +252,7 @@ let profile = {
   role: 'Profissional',
   initials: '',
   photoDataUrl: null,
+  certificateLogoUrl: null,
 };
 
 let appSettings = {
@@ -255,6 +260,7 @@ let appSettings = {
   agenda: { workStart:'08:00', workEnd:'18:00', sessionDuration:50, workDays:['Segunda','Terça','Quarta','Quinta','Sexta'] },
   notifications: { session:true, payment:true, bills:true, weekly:false },
   office: { address:'', defaultValue:210, pix:'' },
+  packageAlertThreshold: 2,
   messageTemplates: {
     charge: `Olá, {primeiro_nome}! Tudo bem?
 
@@ -270,16 +276,25 @@ Passando para confirmar sua sessão de {data} às {hora}{modalidade_texto}.
 Caso precise remarcar, é só me avisar. Até lá! 🌿
 
 {profissional}`,
+    package: `Olá, {primeiro_nome}! Tudo bem?
+
+Passando para avisar que seu pacote de sessões está chegando ao fim — restam {sessoes_restantes} {sessoes_restantes_palavra}.
+
+Quando puder, me avisa se quer renovar para a gente já deixar as próximas sessões organizadas. 🌿
+
+{profissional}`,
   },
 };
 
 const DEFAULT_MESSAGE_TEMPLATES = {
   charge: appSettings.messageTemplates.charge,
   confirmation: appSettings.messageTemplates.confirmation,
+  package: appSettings.messageTemplates.package,
 };
 
 const TEMPLATE_PLACEHOLDERS_CHARGE = ['{primeiro_nome}','{nome_completo}','{sessoes}','{sessoes_palavra}','{valor}','{profissional}'];
 const TEMPLATE_PLACEHOLDERS_CONFIRMATION = ['{primeiro_nome}','{nome_completo}','{data}','{hora}','{modalidade_texto}','{profissional}'];
+const TEMPLATE_PLACEHOLDERS_PACKAGE = ['{primeiro_nome}','{nome_completo}','{sessoes_restantes}','{sessoes_restantes_palavra}','{profissional}'];
 
 function profileFirstName(){
   return profile.name.split(' ')[0];
@@ -306,13 +321,16 @@ async function loadProfileAndSettings(){
   profile.role = data.role;
   profile.initials = data.initials;
   profile.photoDataUrl = data.photoDataUrl;
+  profile.certificateLogoUrl = data.settings.certificateLogoUrl;
 
   appSettings.theme = data.settings.theme;
   appSettings.agenda = data.settings.agenda;
   appSettings.notifications = data.settings.notifications;
   appSettings.office = data.settings.office;
+  appSettings.packageAlertThreshold = data.settings.packageAlertThreshold;
   appSettings.messageTemplates.charge = data.settings.messageTemplates.charge || DEFAULT_MESSAGE_TEMPLATES.charge;
   appSettings.messageTemplates.confirmation = data.settings.messageTemplates.confirmation || DEFAULT_MESSAGE_TEMPLATES.confirmation;
+  appSettings.messageTemplates.package = data.settings.messageTemplates.package || DEFAULT_MESSAGE_TEMPLATES.package;
   prontuarioPasswordIsSet = data.settings.hasProntuarioPassword;
 }
 
@@ -364,6 +382,9 @@ document.querySelectorAll('.nav-item[data-page]').forEach(btn=>{
     if(page === 'prontuarios'){
       state.prontuarioClientId = null;
       renderProntuarios();
+    }
+    if(page === 'atestados'){
+      renderAtestados();
     }
     if(page === 'configuracoes'){
       renderConfiguracoes();
@@ -678,6 +699,90 @@ function printClientFicha(clientId){
   window.print();
 }
 
+/** Imprime apenas uma sessão específica do prontuário de um cliente. */
+function printSingleRecord(client, record){
+  if(!client || !record) return;
+  const dateLabel = new Date(record.date+'T12:00:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
+
+  const area = document.getElementById('print-area');
+  area.innerHTML = `
+    <div class="print-header">
+      <h1>${escapeHtml(client.name)}</h1>
+      <p>Registro de sessão · ${dateLabel} · Gerado em ${TODAY.toLocaleDateString('pt-BR')} · ${escapeHtml(profile.name)}</p>
+    </div>
+    <div class="card" style="padding:18px;">
+      ${record.complaint ? `<div class="record-field"><div class="rf-label">Queixa principal</div><div class="rf-val">${escapeHtml(record.complaint)}</div></div>` : ''}
+      ${record.interventions ? `<div class="record-field"><div class="rf-label">Intervenções</div><div class="rf-val">${escapeHtml(record.interventions)}</div></div>` : ''}
+      ${record.observations ? `<div class="record-field"><div class="rf-label">Observações</div><div class="rf-val">${escapeHtml(record.observations)}</div></div>` : ''}
+      ${record.plan ? `<div class="record-field"><div class="rf-label">Plano</div><div class="rf-val">${escapeHtml(record.plan)}</div></div>` : ''}
+      ${record.freeNotes ? `<div class="record-field"><div class="rf-label">Notas adicionais</div><div class="rf-val">${escapeHtml(record.freeNotes)}</div></div>` : ''}
+      ${(!record.complaint && !record.interventions && !record.observations && !record.plan && !record.freeNotes) ? `<div class="records-empty">Esta sessão não possui anotações registradas.</div>` : ''}
+    </div>
+  `;
+
+  window.print();
+}
+
+/* ============================================================
+   EXPORTAÇÃO EM PLANILHA (CSV)
+   ============================================================ */
+
+/** Converte um array de objetos em texto CSV, escapando vírgulas, aspas e quebras de linha. */
+function buildCSV(headers, rows){
+  const escapeCell = (val) => {
+    const s = val == null ? '' : String(val);
+    if(/[",\n;]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  };
+  const lines = [headers.map(escapeCell).join(';')];
+  rows.forEach(row => lines.push(row.map(escapeCell).join(';')));
+  return '\uFEFF' + lines.join('\r\n'); // BOM no início para acentuação correta no Excel
+}
+
+function downloadCSV(filename, csvContent){
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/** Exporta a lista completa de clientes como planilha CSV. */
+function exportClientsCSV(){
+  if(clients.length === 0){ showToast('Nenhum cliente para exportar'); return; }
+
+  const headers = ['Nome','Telefone','E-mail','Cliente desde','Frequência','Dia fixo','Horário fixo','Modalidade','Valor da sessão','Status','Observações'];
+  const rows = clients.map(c => [
+    c.name, c.phone || '', c.email || '', fmtDate(c.since), c.frequency,
+    c.day || '', c.time || '', c.modality, c.value, c.status==='ativo' ? 'Ativo' : 'Em pausa', c.notes || ''
+  ]);
+
+  const csv = buildCSV(headers, rows);
+  downloadCSV(`alinha-clientes-${isoDate(TODAY)}.csv`, csv);
+  showToast('Planilha de clientes exportada');
+}
+
+/** Exporta todas as sessões de prontuário de UM cliente como planilha CSV. */
+function exportProntuarioCSV(client, records){
+  if(!records || records.length === 0){ showToast('Este cliente ainda não tem sessões registradas'); return; }
+
+  const headers = ['Data','Queixa principal','Intervenções','Observações','Plano','Notas adicionais'];
+  const sorted = [...records].sort((a,b)=> a.date.localeCompare(b.date));
+  const rows = sorted.map(r => [
+    new Date(r.date+'T12:00:00').toLocaleDateString('pt-BR'),
+    r.complaint || '', r.interventions || '', r.observations || '', r.plan || '', r.freeNotes || ''
+  ]);
+
+  const csv = buildCSV(headers, rows);
+  const safeName = client.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  downloadCSV(`alinha-prontuario-${safeName}-${isoDate(TODAY)}.csv`, csv);
+  showToast('Planilha do prontuário exportada');
+}
+
 document.getElementById('client-search').addEventListener('input', (e)=>{
   state.clientSearch = e.target.value;
   renderClients();
@@ -691,6 +796,7 @@ document.querySelectorAll('[data-filter]').forEach(btn=>{
   });
 });
 document.getElementById('btn-novo-cliente').addEventListener('click', ()=> openClientModal(null));
+document.getElementById('btn-export-clients').addEventListener('click', exportClientsCSV);
 
 /* ============================================================
    FINANCEIRO — RENDER
@@ -1842,9 +1948,13 @@ async function renderClientProntuario(clientId){
           <p>Cliente desde ${fmtDate(c.since)} · ${c.status==='ativo' ? 'Ativo' : 'Em pausa'}</p>
         </div>
       </div>
+      <button class="btn btn-ghost btn-sm" id="btn-export-prontuario">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+        Exportar planilha
+      </button>
       <button class="btn btn-ghost btn-sm" id="btn-print-prontuario">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-        Imprimir
+        Imprimir tudo
       </button>
       <button class="btn btn-primary btn-sm" id="btn-nova-sessao">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
@@ -1867,6 +1977,8 @@ async function renderClientProntuario(clientId){
 
       <div id="session-form-slot" class="no-print"></div>
 
+      <div id="packages-slot" class="packages-section no-print"></div>
+
       <div class="records-header">
         <h3>Registros de sessão (${records.length})</h3>
       </div>
@@ -1875,6 +1987,7 @@ async function renderClientProntuario(clientId){
   `;
 
   document.getElementById('btn-print-prontuario').addEventListener('click', ()=> window.print());
+  document.getElementById('btn-export-prontuario').addEventListener('click', ()=> exportProntuarioCSV(c, records));
 
   document.getElementById('back-to-prontuarios').addEventListener('click', ()=>{
     state.prontuarioClientId = null;
@@ -1884,6 +1997,484 @@ async function renderClientProntuario(clientId){
   document.getElementById('btn-nova-sessao').addEventListener('click', ()=> showSessionForm(clientId));
 
   renderRecordsList(clientId);
+  renderPackagesSection(clientId);
+}
+
+/* ============================================================
+   PACOTES DE SESSÕES
+   ============================================================ */
+
+/** Quantas sessões restam num pacote. */
+function packageRemaining(pkg){
+  return Math.max(0, pkg.totalSessions - pkg.usedSessions);
+}
+
+/** Retorna true se o pacote está ativo e dentro (ou abaixo) do limite de alerta configurado. */
+function isPackageLow(pkg){
+  if(pkg.status !== 'ativo') return false;
+  return packageRemaining(pkg) <= appSettings.packageAlertThreshold;
+}
+
+/** Lista de {client, package} para todos os pacotes ativos e baixos de todos os clientes. */
+function getLowPackagesWithClients(){
+  return packages
+    .filter(isPackageLow)
+    .map(pkg => ({ pkg, client: clientById(pkg.clientId) }))
+    .filter(x => !!x.client)
+    .sort((a,b) => packageRemaining(a.pkg) - packageRemaining(b.pkg));
+}
+
+function renderPackagesSection(clientId){
+  const slot = document.getElementById('packages-slot');
+  if(!slot) return;
+
+  const clientPackages = packages
+    .filter(p => p.clientId === clientId)
+    .sort((a,b) => b.startDate.localeCompare(a.startDate));
+
+  let html = `
+    <div class="records-header">
+      <h3>Pacotes de sessões</h3>
+      <button class="btn btn-ghost btn-sm" id="btn-novo-pacote">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+        Novo pacote
+      </button>
+    </div>
+  `;
+
+  if(clientPackages.length === 0){
+    html += `<div class="records-empty">Nenhum pacote cadastrado para este cliente ainda.</div>`;
+  } else {
+    clientPackages.forEach(pkg=>{
+      const remaining = packageRemaining(pkg);
+      const pct = Math.min(100, Math.round((pkg.usedSessions / pkg.totalSessions) * 100));
+      const fillClass = remaining === 0 ? 'critical' : (remaining <= appSettings.packageAlertThreshold ? 'low' : '');
+      const dateRange = pkg.endDate
+        ? `${fmtDateShort(pkg.startDate)} – ${fmtDateShort(pkg.endDate)}`
+        : `Iniciado em ${fmtDateShort(pkg.startDate)}`;
+      const statusLabel = pkg.status === 'ativo' ? '' : (pkg.status === 'encerrado' ? ' · Encerrado' : ' · Cancelado');
+
+      html += `
+        <div class="package-card status-${pkg.status}">
+          <div class="package-top">
+            <div>
+              <div class="package-name">${escapeHtml(pkg.name)}</div>
+              <div class="package-dates">${dateRange}${statusLabel}</div>
+            </div>
+            ${pkg.value != null ? `<div class="value-mono" style="font-size:13.5px;">${fmtBRL(pkg.value)}</div>` : ''}
+          </div>
+          <div class="package-progress-track">
+            <div class="package-progress-fill ${fillClass}" style="width:${pct}%;"></div>
+          </div>
+          <div class="package-meta">
+            <span>${pkg.usedSessions} de ${pkg.totalSessions} sessões usadas</span>
+            <span>${remaining} ${remaining===1 ? 'restante' : 'restantes'}</span>
+          </div>
+          <div class="package-actions">
+            ${pkg.status==='ativo' ? `<button class="btn btn-ghost btn-sm" data-use-session="${pkg.id}">+1 sessão usada</button>` : ''}
+            <button class="btn btn-ghost btn-sm" data-edit-package="${pkg.id}">Editar</button>
+            <button class="btn-danger-text" data-delete-package="${pkg.id}">Excluir</button>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  slot.innerHTML = html;
+
+  document.getElementById('btn-novo-pacote').addEventListener('click', ()=> openPackageModal(clientId, null));
+
+  slot.querySelectorAll('[data-use-session]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const pkg = packages.find(p=>p.id===btn.dataset.useSession);
+      if(!pkg) return;
+      btn.disabled = true;
+      const newUsed = Math.min(pkg.totalSessions, pkg.usedSessions + 1);
+      try{
+        const updated = await db.incrementPackageUsedSessions(pkg.id, newUsed);
+        const idx = packages.findIndex(p=>p.id===pkg.id);
+        packages[idx] = updated;
+        renderPackagesSection(clientId);
+        renderPackageAlert();
+        showToast('Sessão registrada no pacote');
+      } catch(err){
+        console.error(err);
+        btn.disabled = false;
+        showToast('Erro ao atualizar pacote. Tente novamente.');
+      }
+    });
+  });
+
+  slot.querySelectorAll('[data-edit-package]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const pkg = packages.find(p=>p.id===btn.dataset.editPackage);
+      if(pkg) openPackageModal(clientId, pkg);
+    });
+  });
+
+  slot.querySelectorAll('[data-delete-package]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = btn.dataset.deletePackage;
+      btn.disabled = true;
+      try{
+        await db.deletePackage(id);
+        packages = packages.filter(p=>p.id!==id);
+        renderPackagesSection(clientId);
+        renderPackageAlert();
+        showToast('Pacote excluído');
+      } catch(err){
+        console.error(err);
+        btn.disabled = false;
+        showToast('Erro ao excluir pacote. Tente novamente.');
+      }
+    });
+  });
+}
+
+function fmtDateShort(iso){
+  return new Date(iso+'T12:00:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+
+function openPackageModal(clientId, existingPkg){
+  const isEdit = !!existingPkg;
+  const p = existingPkg || { name:'Pacote de sessões', totalSessions:10, usedSessions:0, startDate: isoDate(TODAY), endDate:'', value:'', status:'ativo' };
+
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" id="overlay-package">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>${isEdit ? 'Editar pacote' : 'Novo pacote'}</h2>
+          <button class="modal-close" id="close-package-modal">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <form id="form-package">
+          <div class="modal-body">
+            <div class="field" style="margin-bottom:14px;">
+              <label>Nome do pacote</label>
+              <input type="text" id="pkg-name" value="${escapeHtml(p.name)}" placeholder="Ex: Pacote de 10 sessões">
+            </div>
+            <div class="field-row" style="margin-bottom:14px;">
+              <div class="field"><label>Total de sessões</label><input type="number" min="1" id="pkg-total" value="${p.totalSessions}"></div>
+              <div class="field"><label>Sessões já usadas</label><input type="number" min="0" id="pkg-used" value="${p.usedSessions}"></div>
+            </div>
+            <div class="field-row" style="margin-bottom:14px;">
+              <div class="field"><label>Data inicial</label><input type="date" id="pkg-start" value="${p.startDate}"></div>
+              <div class="field"><label>Data final (opcional)</label><input type="date" id="pkg-end" value="${p.endDate || ''}"></div>
+            </div>
+            <div class="field" style="margin-bottom:14px;">
+              <label>Valor do pacote (opcional)</label>
+              <input type="number" min="0" id="pkg-value" value="${p.value != null ? p.value : ''}" placeholder="Ex: 1800">
+            </div>
+            ${isEdit ? `
+            <div class="field" style="margin-bottom:4px;">
+              <label>Status</label>
+              <div class="radio-group" id="pkg-status-group">
+                <div class="radio-pill ${p.status==='ativo'?'selected':''}" data-value="ativo">Ativo</div>
+                <div class="radio-pill ${p.status==='encerrado'?'selected':''}" data-value="encerrado">Encerrado</div>
+                <div class="radio-pill ${p.status==='cancelado'?'selected':''}" data-value="cancelado">Cancelado</div>
+              </div>
+            </div>` : ''}
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" id="cancel-package">Cancelar</button>
+              <button type="submit" class="btn btn-primary">${isEdit ? 'Salvar alterações' : 'Criar pacote'}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  let selStatus = p.status;
+  document.querySelectorAll('#pkg-status-group .radio-pill').forEach(pill=>{
+    pill.addEventListener('click', ()=>{
+      document.querySelectorAll('#pkg-status-group .radio-pill').forEach(x=>x.classList.remove('selected'));
+      pill.classList.add('selected');
+      selStatus = pill.dataset.value;
+    });
+  });
+
+  document.getElementById('close-package-modal').addEventListener('click', closeModal);
+  document.getElementById('cancel-package').addEventListener('click', closeModal);
+  document.getElementById('overlay-package').addEventListener('click', (e)=>{ if(e.target.id==='overlay-package') closeModal(); });
+
+  document.getElementById('form-package').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    const formData = {
+      clientId,
+      name: document.getElementById('pkg-name').value.trim() || 'Pacote de sessões',
+      totalSessions: Math.max(1, Number(document.getElementById('pkg-total').value) || 1),
+      usedSessions: Math.max(0, Number(document.getElementById('pkg-used').value) || 0),
+      startDate: document.getElementById('pkg-start').value || isoDate(TODAY),
+      endDate: document.getElementById('pkg-end').value || null,
+      value: document.getElementById('pkg-value').value ? Number(document.getElementById('pkg-value').value) : null,
+      status: isEdit ? selStatus : 'ativo',
+    };
+
+    try{
+      if(isEdit){
+        const updated = await db.updatePackage(existingPkg.id, formData);
+        const idx = packages.findIndex(x=>x.id===existingPkg.id);
+        packages[idx] = updated;
+        showToast('Pacote atualizado');
+      } else {
+        const created = await db.createPackage(formData);
+        packages.unshift(created);
+        showToast('Pacote criado');
+      }
+      closeModal();
+      renderPackagesSection(clientId);
+      renderPackageAlert();
+    } catch(err){
+      console.error(err);
+      submitBtn.disabled = false;
+      showToast('Erro ao salvar pacote. Tente novamente.');
+    }
+  });
+}
+
+/* ---------- Cartão de alerta na Agenda ---------- */
+function renderPackageAlert(){
+  const slot = document.getElementById('package-alert-slot');
+  if(!slot) return;
+
+  const lowOnes = getLowPackagesWithClients();
+  if(lowOnes.length === 0){ slot.innerHTML = ''; return; }
+
+  let itemsHtml = '';
+  lowOnes.forEach(({pkg, client})=>{
+    const remaining = packageRemaining(pkg);
+    itemsHtml += `
+      <div class="package-alert-item">
+        <div>
+          <div class="client-name">${escapeHtml(client.name)}</div>
+          <div class="package-remaining">${remaining === 0 ? 'Pacote esgotado' : `${remaining} ${remaining===1?'sessão restante':'sessões restantes'}`} · ${escapeHtml(pkg.name)}</div>
+        </div>
+        <button class="btn btn-whatsapp btn-sm" data-package-message="${pkg.id}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.77.46 3.45 1.27 4.92L2 22l5.3-1.39a9.9 9.9 0 004.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.02h-.01a8.1 8.1 0 01-4.13-1.13l-.3-.17-3.07.8.82-3-.2-.31a8.07 8.07 0 01-1.25-4.3c0-4.48 3.65-8.13 8.14-8.13 2.17 0 4.21.85 5.75 2.38a8.07 8.07 0 012.38 5.75c0 4.49-3.65 8.11-8.13 8.11zm4.46-6.08c-.25-.12-1.45-.71-1.67-.8-.22-.08-.39-.12-.55.13-.16.24-.63.79-.78.96-.14.16-.29.18-.53.06-.25-.12-1.04-.38-1.98-1.22-.73-.65-1.22-1.45-1.37-1.7-.14-.24-.02-.37.11-.5.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.16.04-.31-.02-.43-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.43.06-.65.31-.22.24-.86.84-.86 2.05 0 1.21.88 2.37 1 2.54.12.16 1.73 2.64 4.2 3.7.59.25 1.04.4 1.4.52.59.19 1.12.16 1.55.1.47-.07 1.45-.59 1.65-1.16.21-.57.21-1.06.14-1.16-.06-.1-.22-.16-.47-.28z"/></svg>
+          Avisar
+        </button>
+      </div>
+    `;
+  });
+
+  slot.innerHTML = `
+    <div class="package-alert-card">
+      <div class="package-alert-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.7 3.86a2 2 0 00-3.4 0z"/></svg>
+        ${lowOnes.length} ${lowOnes.length===1 ? 'pacote precisa' : 'pacotes precisam'} de atenção
+      </div>
+      ${itemsHtml}
+    </div>
+  `;
+
+  slot.querySelectorAll('[data-package-message]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const pkg = packages.find(p=>p.id===btn.dataset.packageMessage);
+      const client = clientById(pkg.clientId);
+      sendPackageWhatsAppMessage(client, pkg);
+    });
+  });
+}
+
+function sendPackageWhatsAppMessage(client, pkg){
+  if(!client) return;
+  const phoneDigits = (client.phone || '').replace(/\D/g, '');
+  if(!phoneDigits){ showToast('Este cliente não tem telefone cadastrado'); return; }
+
+  const remaining = packageRemaining(pkg);
+  const message = fillTemplate(appSettings.messageTemplates.package, {
+    primeiro_nome: client.name.split(' ')[0],
+    nome_completo: client.name,
+    sessoes_restantes: String(remaining),
+    sessoes_restantes_palavra: remaining === 1 ? 'sessão' : 'sessões',
+    profissional: profile.name,
+  });
+
+  const waPhone = '55' + phoneDigits.replace(/^55/, '');
+  const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`;
+  window.open(waUrl, '_blank');
+}
+
+/* ============================================================
+   ATESTADOS
+   ============================================================ */
+function renderAtestados(){
+  document.getElementById('atestado-list-view').style.display = 'block';
+  document.getElementById('atestado-editor-view').style.display = 'none';
+
+  const grid = document.getElementById('atestado-grid');
+  grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--ink-soft);">Carregando atestados...</div>`;
+
+  db.loadCertificates().then(data=>{
+    certificates = data;
+    renderAtestadoGrid();
+  }).catch(err=>{
+    console.error(err);
+    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--alert);">Erro ao carregar atestados. Tente novamente.</div>`;
+  });
+
+  document.getElementById('btn-novo-atestado').onclick = () => openAtestadoEditor(null);
+}
+
+function renderAtestadoGrid(){
+  const grid = document.getElementById('atestado-grid');
+
+  if(certificates.length === 0){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <h3>Nenhum atestado emitido ainda</h3>
+      <p>Clique em "Novo atestado" para criar o primeiro.</p>
+    </div>`;
+    return;
+  }
+
+  const sorted = [...certificates].sort((a,b)=> b.issueDate.localeCompare(a.issueDate));
+  let html = '';
+  sorted.forEach(cert=>{
+    const name = cert.clientNameSnapshot || 'Sem cliente vinculado';
+    const dateLabel = new Date(cert.issueDate+'T12:00:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'short', year:'numeric'});
+    const preview = (cert.content || '').replace(/\s+/g,' ').trim().slice(0, 90);
+    html += `<div class="client-card" data-open-cert="${cert.id}">
+      <div class="client-top">
+        <div class="client-avatar" style="background:${colorFor(name)};">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+        </div>
+        <div>
+          <div class="client-name">${escapeHtml(name)}</div>
+          <div class="client-since">Emitido em ${dateLabel}</div>
+        </div>
+      </div>
+      <div class="client-meta">
+        <span>${escapeHtml(preview) || 'Sem conteúdo ainda'}${preview.length>=90?'…':''}</span>
+      </div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+  grid.querySelectorAll('[data-open-cert]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const cert = certificates.find(c=>c.id===el.dataset.openCert);
+      if(cert) openAtestadoEditor(cert);
+    });
+  });
+}
+
+function openAtestadoEditor(existingCert){
+  const isEdit = !!existingCert;
+  document.getElementById('atestado-list-view').style.display = 'none';
+  const view = document.getElementById('atestado-editor-view');
+  view.style.display = 'block';
+
+  const clientOptions = `<option value="">— Sem cliente vinculado —</option>` +
+    clients.map(c => `<option value="${c.id}" ${existingCert && existingCert.clientId===c.id ? 'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+
+  const defaultContent = `Atesto, para os devidos fins, que ${'{cliente}'} esteve sob meus cuidados profissionais, necessitando de afastamento de suas atividades pelo período que se fizer necessário.`;
+  const today = isoDate(TODAY);
+
+  view.innerHTML = `
+    <div class="prontuario-header no-print">
+      <button class="back-btn" id="back-to-atestados">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="prontuario-id">
+        <h1>${isEdit ? 'Editar atestado' : 'Novo atestado'}</h1>
+      </div>
+      ${isEdit ? `<button class="btn-danger-text" id="btn-delete-certificate">Excluir</button>` : ''}
+      <button class="btn btn-ghost btn-sm" id="btn-print-certificate">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+        Imprimir
+      </button>
+      <button class="btn btn-primary btn-sm" id="btn-save-certificate">Salvar</button>
+    </div>
+
+    <div class="certificate-meta-fields no-print">
+      <div class="field">
+        <label>Cliente (opcional)</label>
+        <select id="cert-client">${clientOptions}</select>
+      </div>
+      <div class="field" style="max-width:180px;">
+        <label>Data de emissão</label>
+        <input type="date" id="cert-date" value="${existingCert ? existingCert.issueDate : today}">
+      </div>
+    </div>
+
+    <div id="printable-certificate">
+      <div class="certificate-paper card">
+        <div class="certificate-logo-area" id="certificate-print-logo">
+          ${profile.certificateLogoUrl ? `<img src="${profile.certificateLogoUrl}" alt="Logo">` : ''}
+        </div>
+        <div class="certificate-issuer">
+          ${escapeHtml(profile.name)}${profile.role ? ' · '+escapeHtml(profile.role) : ''}
+        </div>
+        <textarea class="certificate-textarea no-print" id="cert-content" placeholder="Digite o texto do atestado...">${escapeHtml(existingCert ? existingCert.content : defaultContent)}</textarea>
+        <div class="certificate-textarea print-only" id="cert-content-print" style="white-space:pre-wrap;"></div>
+      </div>
+    </div>
+  `;
+
+  const textarea = document.getElementById('cert-content');
+  const printDiv = document.getElementById('cert-content-print');
+  const syncPrintContent = () => { printDiv.textContent = textarea.value; };
+  syncPrintContent();
+  textarea.addEventListener('input', syncPrintContent);
+
+  document.getElementById('back-to-atestados').addEventListener('click', ()=> renderAtestados());
+
+  document.getElementById('btn-print-certificate').addEventListener('click', ()=>{
+    syncPrintContent();
+    window.print();
+  });
+
+  document.getElementById('btn-save-certificate').addEventListener('click', async ()=>{
+    const btn = document.getElementById('btn-save-certificate');
+    btn.disabled = true;
+
+    const clientIdVal = document.getElementById('cert-client').value || null;
+    const client = clientIdVal ? clientById(clientIdVal) : null;
+    const certData = {
+      clientId: clientIdVal,
+      clientNameSnapshot: client ? client.name : null,
+      issueDate: document.getElementById('cert-date').value || today,
+      content: textarea.value,
+    };
+
+    try{
+      if(isEdit){
+        const updated = await db.updateCertificate(existingCert.id, certData);
+        const idx = certificates.findIndex(c=>c.id===existingCert.id);
+        certificates[idx] = updated;
+        showToast('Atestado atualizado');
+      } else {
+        const created = await db.createCertificate(certData);
+        certificates.unshift(created);
+        showToast('Atestado salvo');
+      }
+      renderAtestados();
+    } catch(err){
+      console.error(err);
+      btn.disabled = false;
+      showToast('Erro ao salvar atestado. Tente novamente.');
+    }
+  });
+
+  const deleteBtn = document.getElementById('btn-delete-certificate');
+  if(deleteBtn){
+    deleteBtn.addEventListener('click', async ()=>{
+      deleteBtn.disabled = true;
+      try{
+        await db.deleteCertificate(existingCert.id);
+        certificates = certificates.filter(c=>c.id!==existingCert.id);
+        showToast('Atestado excluído');
+        renderAtestados();
+      } catch(err){
+        console.error(err);
+        deleteBtn.disabled = false;
+        showToast('Erro ao excluir atestado. Tente novamente.');
+      }
+    });
+  }
 }
 
 function renderRecordsList(clientId){
@@ -1904,7 +2495,12 @@ function renderRecordsList(clientId){
     html += `<div class="record-card">
       <div class="record-top">
         <span class="record-date">${dateLabel}</span>
-        <button class="btn-danger-text" data-delete-record="${r.id}">Excluir</button>
+        <div style="display:flex; gap:14px; align-items:center;">
+          <button class="btn-icon" data-print-record="${r.id}" title="Imprimir esta sessão">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+          </button>
+          <button class="btn-danger-text" data-delete-record="${r.id}">Excluir</button>
+        </div>
       </div>
       ${r.complaint ? `<div class="record-field"><div class="rf-label">Queixa principal</div><div class="rf-val">${escapeHtml(r.complaint)}</div></div>` : ''}
       ${r.interventions ? `<div class="record-field"><div class="rf-label">Intervenções</div><div class="rf-val">${escapeHtml(r.interventions)}</div></div>` : ''}
@@ -1914,6 +2510,12 @@ function renderRecordsList(clientId){
     </div>`;
   });
   list.innerHTML = html;
+  list.querySelectorAll('[data-print-record]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const record = records.find(r=>r.id===btn.dataset.printRecord);
+      if(record) printSingleRecord(clientById(clientId), record);
+    });
+  });
   list.querySelectorAll('[data-delete-record]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const id = btn.dataset.deleteRecord;
@@ -2218,6 +2820,66 @@ function renderSettingsPerfil(){
       submitBtn.disabled = false;
     }
   };
+
+  /* ---------- Logo do atestado ---------- */
+  updateCertificateLogoPreview();
+  const certLogoInput = document.getElementById('certificate-logo-input');
+  const btnUploadCertLogo = document.getElementById('btn-upload-certificate-logo');
+  const btnRemoveCertLogo = document.getElementById('btn-remove-certificate-logo');
+
+  btnUploadCertLogo.onclick = () => certLogoInput.click();
+
+  certLogoInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    if(!file.type.startsWith('image/')){ showToast('Selecione um arquivo de imagem'); return; }
+    if(file.size > 2 * 1024 * 1024){ showToast('Escolha uma imagem de até 2MB'); return; }
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const previous = profile.certificateLogoUrl;
+      profile.certificateLogoUrl = ev.target.result;
+      updateCertificateLogoPreview();
+      try{
+        await db.updateProfile({ certificateLogoUrl: profile.certificateLogoUrl });
+        showToast('Logo atualizada');
+      } catch(err){
+        console.error(err);
+        profile.certificateLogoUrl = previous;
+        updateCertificateLogoPreview();
+        showToast('Erro ao salvar logo. Tente novamente.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  btnRemoveCertLogo.onclick = async () => {
+    const previous = profile.certificateLogoUrl;
+    profile.certificateLogoUrl = null;
+    certLogoInput.value = '';
+    updateCertificateLogoPreview();
+    try{
+      await db.updateProfile({ certificateLogoUrl: null });
+      showToast('Logo removida');
+    } catch(err){
+      console.error(err);
+      profile.certificateLogoUrl = previous;
+      updateCertificateLogoPreview();
+      showToast('Erro ao remover logo. Tente novamente.');
+    }
+  };
+}
+
+function updateCertificateLogoPreview(){
+  const preview = document.getElementById('certificate-logo-preview');
+  const removeBtn = document.getElementById('btn-remove-certificate-logo');
+  if(!preview) return;
+  if(profile.certificateLogoUrl){
+    preview.innerHTML = `<img src="${profile.certificateLogoUrl}" alt="Logo do atestado" style="object-fit:contain; padding:6px;">`;
+    removeBtn.style.display = 'inline-flex';
+  } else {
+    preview.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>`;
+    removeBtn.style.display = 'none';
+  }
 }
 
 function initials0FromName(name){
@@ -2306,6 +2968,38 @@ function renderSettingsAgenda(){
     } catch(err){
       console.error(err);
       showToast('Erro ao salvar preferências. Tente novamente.');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  };
+
+  /* ---------- Limite de alerta de pacotes ---------- */
+  document.getElementById('set-package-threshold').value = String(appSettings.packageAlertThreshold);
+  const pkgForm = document.getElementById('form-settings-packages');
+  const pkgSaveHint = document.getElementById('packages-save-hint');
+
+  document.getElementById('set-package-threshold').oninput = () => {
+    pkgSaveHint.classList.remove('saved');
+    pkgSaveHint.innerHTML = 'Alterações não salvas';
+  };
+
+  pkgForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const submitBtn = pkgForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    const threshold = Number(document.getElementById('set-package-threshold').value) || 2;
+
+    try{
+      await db.updateProfile({ packageAlertThreshold: threshold });
+      appSettings.packageAlertThreshold = threshold;
+      pkgSaveHint.classList.add('saved');
+      pkgSaveHint.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg> Salvo`;
+      showToast('Preferência de alerta salva');
+      renderPackageAlert();
+    } catch(err){
+      console.error(err);
+      showToast('Erro ao salvar preferência. Tente novamente.');
     } finally {
       submitBtn.disabled = false;
     }
@@ -2406,7 +3100,7 @@ function setupTemplateEditor({ formId, textareaId, hintId, resetBtnId, placehold
 
   textarea.oninput = () => { hint.classList.remove('saved'); hint.innerHTML = 'Alterações não salvas'; };
 
-  const dbFieldMap = { charge: 'messageTemplateCharge', confirmation: 'messageTemplateConfirmation' };
+  const dbFieldMap = { charge: 'messageTemplateCharge', confirmation: 'messageTemplateConfirmation', package: 'messageTemplatePackage' };
 
   form.onsubmit = async (e) => {
     e.preventDefault();
@@ -2455,6 +3149,11 @@ function renderSettingsMensagens(){
     formId: 'form-template-confirmation', textareaId: 'tpl-confirmation', hintId: 'tpl-confirmation-hint',
     resetBtnId: 'tpl-confirmation-reset', placeholderListId: 'tpl-confirmation-placeholders',
     placeholders: TEMPLATE_PLACEHOLDERS_CONFIRMATION, templateKey: 'confirmation'
+  });
+  setupTemplateEditor({
+    formId: 'form-template-package', textareaId: 'tpl-package', hintId: 'tpl-package-hint',
+    resetBtnId: 'tpl-package-reset', placeholderListId: 'tpl-package-placeholders',
+    placeholders: TEMPLATE_PLACEHOLDERS_PACKAGE, templateKey: 'package'
   });
 }
 
@@ -2543,7 +3242,7 @@ function exportBackupJSON(){
   const payload = {
     exportedAt: new Date().toISOString(),
     profile, appSettings,
-    clients, appointments, payments, bills, sessionRecords,
+    clients, appointments, payments, bills, sessionRecords, packages, certificates,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -2593,9 +3292,12 @@ function confirmClearAllData(){
       payments = [];
       bills = [];
       sessionRecords = [];
+      packages = [];
+      certificates = [];
       closeModal();
       renderClients();
       renderAgenda();
+      renderPackageAlert();
       renderFinanceiro();
       showToast('Todos os dados foram apagados');
     } catch(err){
@@ -2648,6 +3350,7 @@ async function initApp(){
   applyTheme();
   applyProfileToUI();
   renderAgenda();
+  renderPackageAlert();
   renderClients();
   renderFinanceiro();
 

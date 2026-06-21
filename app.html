@@ -77,6 +77,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3"/></svg>
         Prontuários
       </button>
+      <button class="nav-item" data-page="atestados">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg>
+        Atestados
+      </button>
       <button class="nav-item" data-page="configuracoes">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4.5 8-11.8V5l-8-3-8 3v5.2C4 17.5 12 22 12 22z"/></svg>
         Configurações
@@ -109,6 +113,8 @@
           Nova consulta
         </button>
       </div>
+
+      <div id="package-alert-slot"></div>
 
       <div class="agenda-toolbar">
         <div class="week-nav">
@@ -147,10 +153,16 @@
           <h1>Clientes</h1>
           <p id="clients-count">12 clientes ativos · 2 em pausa</p>
         </div>
-        <button class="btn btn-primary" id="btn-novo-cliente">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-          Novo cliente
-        </button>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-ghost" id="btn-export-clients">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+            Exportar planilha
+          </button>
+          <button class="btn btn-primary" id="btn-novo-cliente">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+            Novo cliente
+          </button>
+        </div>
       </div>
 
       <div class="clients-toolbar">
@@ -241,6 +253,26 @@
       <div id="prontuario-compilado-view" style="display:none;"></div>
     </section>
 
+    <!-- ===================== ATESTADOS ===================== -->
+    <section class="page" id="page-atestados">
+      <div id="atestado-list-view">
+        <div class="page-header">
+          <div>
+            <h1>Atestados</h1>
+            <p>Crie, edite e imprima atestados e declarações.</p>
+          </div>
+          <button class="btn btn-primary" id="btn-novo-atestado">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+            Novo atestado
+          </button>
+        </div>
+
+        <div id="atestado-grid" class="clients-grid"></div>
+      </div>
+
+      <div id="atestado-editor-view" style="display:none;"></div>
+    </section>
+
     <!-- ===================== CONFIGURAÇÕES ===================== -->
     <section class="page" id="page-configuracoes">
       <div class="page-header">
@@ -304,6 +336,21 @@
                 </div>
               </form>
             </div>
+
+            <div class="card settings-card">
+              <h3>Logo para atestados</h3>
+              <p class="settings-hint" style="margin-bottom:16px;">Aparece no topo dos atestados impressos. Opcional.</p>
+              <div class="settings-photo-row">
+                <div class="settings-avatar-preview" id="certificate-logo-preview" style="border-radius:10px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                </div>
+                <div class="settings-photo-actions">
+                  <input type="file" id="certificate-logo-input" accept="image/*" style="display:none;">
+                  <button class="btn btn-ghost btn-sm" id="btn-upload-certificate-logo">Enviar logo</button>
+                  <button class="btn-danger-text" id="btn-remove-certificate-logo" style="display:none;">Remover logo</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- ---------- APARÊNCIA ---------- -->
@@ -365,6 +412,30 @@
                 </div>
                 <div class="settings-footer">
                   <span class="save-hint saved" id="agenda-save-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                    Salvo
+                  </span>
+                  <button type="submit" class="btn btn-primary btn-sm">Salvar alterações</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card settings-card">
+              <h3>Pacotes de sessões</h3>
+              <p class="settings-hint" style="margin-bottom:16px;">Defina quando um cliente deve aparecer no alerta de pacote acabando, na Agenda.</p>
+              <form id="form-settings-packages">
+                <div class="field" style="margin-bottom:4px; max-width:220px;">
+                  <label>Avisar quando restarem</label>
+                  <select id="set-package-threshold">
+                    <option value="1">1 sessão</option>
+                    <option value="2" selected>2 sessões</option>
+                    <option value="3">3 sessões</option>
+                    <option value="4">4 sessões</option>
+                    <option value="5">5 sessões</option>
+                  </select>
+                </div>
+                <div class="settings-footer">
+                  <span class="save-hint saved" id="packages-save-hint">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
                     Salvo
                   </span>
@@ -469,6 +540,25 @@
                   </span>
                   <div style="display:flex; gap:8px;">
                     <button type="button" class="btn btn-ghost btn-sm" id="tpl-confirmation-reset">Restaurar padrão</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Salvar modelo</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div class="card settings-card" style="max-width:620px;">
+              <h3>Modelo de pacote acabando</h3>
+              <p class="settings-hint" style="margin-bottom:12px;">Usado quando você envia um aviso de pacote de sessões perto do fim, direto da Agenda.</p>
+              <form id="form-template-package">
+                <textarea class="notes-textarea template-textarea" id="tpl-package" rows="8"></textarea>
+                <div class="template-placeholder-list" id="tpl-package-placeholders"></div>
+                <div class="settings-footer">
+                  <span class="save-hint saved" id="tpl-package-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                    Salvo
+                  </span>
+                  <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-ghost btn-sm" id="tpl-package-reset">Restaurar padrão</button>
                     <button type="submit" class="btn btn-primary btn-sm">Salvar modelo</button>
                   </div>
                 </div>
