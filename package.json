@@ -1,0 +1,9 @@
+{
+  "name": "alinha",
+  "version": "1.0.0",
+  "description": "Alinha — Gestão Inteligente para Psicologia",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve . -p 3000"
+  }
+}
