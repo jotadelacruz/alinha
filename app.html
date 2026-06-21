@@ -260,6 +260,7 @@
           <button class="settings-nav-item" data-settings-tab="mensagens">Mensagens</button>
           <button class="settings-nav-item" data-settings-tab="seguranca">Segurança</button>
           <button class="settings-nav-item" data-settings-tab="dados">Dados e backup</button>
+          <button class="settings-nav-item" data-settings-tab="sobre">Sobre</button>
         </nav>
 
         <div class="settings-content">
@@ -498,6 +499,24 @@
               <h3 style="color:var(--alert);">Zona de risco</h3>
               <p class="settings-hint" style="margin-bottom:18px;">Esta ação apaga todos os dados desta sessão (clientes, consultas, prontuários e financeiro). Não pode ser desfeita.</p>
               <button class="btn-danger-text" id="btn-clear-data" style="font-size:14px;">Limpar todos os dados</button>
+            </div>
+          </div>
+
+          <!-- ---------- SOBRE ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-sobre" style="display:none;">
+            <div class="card settings-card">
+              <h3>Sobre o Alinha</h3>
+              <p class="settings-hint" style="margin-bottom:18px;">Gestão Inteligente para Atendimentos — agenda, clientes e financeiro em um só lugar.</p>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <a href="termos.html" target="_blank" rel="noopener" class="btn btn-ghost" style="justify-content:flex-start;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                  Termos de Uso
+                </a>
+                <a href="privacidade.html" target="_blank" rel="noopener" class="btn btn-ghost" style="justify-content:flex-start;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  Política de Privacidade
+                </a>
+              </div>
             </div>
           </div>
 
