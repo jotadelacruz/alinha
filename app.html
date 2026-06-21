@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alinha — Gestão Inteligente para Atendimentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  /* Tela de carregamento inicial, exibida enquanto os dados do usuário são buscados */
+  #app-loading{
+    position:fixed; inset:0; background:var(--paper); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; z-index:9999;
+  }
+  #app-loading .spinner{
+    width:34px; height:34px; border:3px solid var(--line); border-top-color:var(--navy);
+    border-radius:50%; animation:spin .7s linear infinite;
+  }
+  #app-loading p{ font-size:13px; color:var(--ink-soft); }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .app{ display:none; }
+  .app.ready{ display:flex; }
+</style>
+</head>
+<body>
+
+<div id="app-loading">
+  <div class="spinner"></div>
+  <p>Carregando seus dados...</p>
+</div>
+
+<!-- Barra superior visível apenas no mobile -->
+<div class="mobile-topbar">
+  <div class="brand">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Alinha</div>
+  </div>
+  <button class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Abrir menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+</div>
+<div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <div class="brand-name">Alinha</div>
+        <div class="brand-sub">Gestão Inteligente para Atendimentos</div>
+      </div>
+    </div>
+
+    <div class="daypart">
+      <span class="daypart-dot"></span>
+      <span id="daypart-text">Boa tarde — sexta, 19 de junho</span>
+    </div>
+
+    <nav>
+      <div class="nav-label">Principal</div>
+      <button class="nav-item active" data-page="agenda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        Agenda
+      </button>
+      <button class="nav-item" data-page="clientes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="8" r="2.6"/><path d="M21 19.5c0-2.8-1.9-5-4.5-5.6"/></svg>
+        Clientes
+      </button>
+      <button class="nav-item" data-page="financeiro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1.2-5 3 2.2 2.7 5 3 5 1.1 5 3-2.2 3-5 3-5-1.1-5-3"/></svg>
+        Financeiro
+      </button>
+      <div class="nav-label">Outros</div>
+      <button class="nav-item" data-page="prontuarios">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3"/></svg>
+        Prontuários
+      </button>
+      <button class="nav-item" data-page="atestados">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg>
+        Atestados
+      </button>
+      <button class="nav-item" data-page="configuracoes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4.5 8-11.8V5l-8-3-8 3v5.2C4 17.5 12 22 12 22z"/></svg>
+        Configurações
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar" id="sidebar-avatar">ND</div>
+      <div style="flex:1; min-width:0;">
+        <div class="footer-name" id="sidebar-name">Nilane Dornelles</div>
+        <div class="footer-role" id="sidebar-role">Profissional</div>
+      </div>
+      <button class="btn-icon" id="btn-logout" title="Sair">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ===================== AGENDA ===================== -->
+    <section class="page active" id="page-agenda">
+      <div class="page-header">
+        <div>
+          <h1>Agenda</h1>
+          <p>Sua semana de atendimentos, organizada por horário.</p>
+        </div>
+        <button class="btn btn-primary" id="btn-nova-consulta">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+          Nova consulta
+        </button>
+      </div>
+
+      <div id="package-alert-slot"></div>
+
+      <div class="agenda-toolbar">
+        <div class="week-nav">
+          <button id="week-prev">‹</button>
+          <span class="week-label" id="week-label">16 – 20 de junho</span>
+          <button id="week-next">›</button>
+          <button class="btn btn-ghost btn-sm" id="week-today" style="margin-left:6px;">Hoje</button>
+        </div>
+        <div class="view-toggle">
+          <button class="active" data-view="semana">Semana</button>
+          <button data-view="lista">Lista</button>
+        </div>
+      </div>
+
+      <div id="view-semana">
+        <div class="week-grid" id="week-grid">
+          <!-- gerado via JS -->
+        </div>
+        <div style="display:flex; gap:18px; margin-top:16px; font-size:12.5px; color:var(--ink-soft); flex-wrap:wrap;">
+          <span style="display:flex; align-items:center; gap:6px;"><span class="status-dot confirmed"></span> Confirmada</span>
+          <span style="display:flex; align-items:center; gap:6px;"><span class="status-dot pending"></span> Aguardando confirmação</span>
+          <span style="display:flex; align-items:center; gap:6px;"><span class="status-dot online"></span> Atendimento online</span>
+          <span style="display:flex; align-items:center; gap:6px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 014-4h14M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 01-4 4H3"/></svg> Consulta recorrente</span>
+        </div>
+      </div>
+
+      <div id="view-lista" style="display:none;">
+        <div class="agenda-list" id="agenda-list-content"></div>
+      </div>
+    </section>
+
+    <!-- ===================== CLIENTES ===================== -->
+    <section class="page" id="page-clientes">
+      <div class="page-header">
+        <div>
+          <h1>Clientes</h1>
+          <p id="clients-count">12 clientes ativos · 2 em pausa</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-ghost" id="btn-export-clients">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+            Exportar planilha
+          </button>
+          <button class="btn btn-primary" id="btn-novo-cliente">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+            Novo cliente
+          </button>
+        </div>
+      </div>
+
+      <div class="clients-toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input type="text" id="client-search" placeholder="Buscar cliente por nome...">
+        </div>
+        <button class="btn btn-ghost btn-sm active" data-filter="todos">Todos</button>
+        <button class="btn btn-ghost btn-sm" data-filter="ativo">Ativos</button>
+        <button class="btn btn-ghost btn-sm" data-filter="pausa">Em pausa</button>
+      </div>
+
+      <div class="clients-grid" id="clients-grid"></div>
+    </section>
+
+    <!-- ===================== FINANCEIRO ===================== -->
+    <section class="page" id="page-financeiro">
+      <div class="page-header">
+        <div>
+          <h1>Financeiro</h1>
+          <p>Visão geral de recebimentos e pendências.</p>
+        </div>
+        <button class="btn btn-primary" id="btn-novo-recebimento">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+          Registrar recebimento
+        </button>
+      </div>
+
+      <div class="kpi-row" id="kpi-row"></div>
+
+      <div class="fin-summary">
+        <div class="card chart-card">
+          <h3>Recebimentos — últimos 6 meses</h3>
+          <div class="bars">
+            <div class="bar-group"><div class="bar" style="height:58%;"></div><div class="bar-label">Jan</div></div>
+            <div class="bar-group"><div class="bar" style="height:67%;"></div><div class="bar-label">Fev</div></div>
+            <div class="bar-group"><div class="bar" style="height:74%;"></div><div class="bar-label">Mar</div></div>
+            <div class="bar-group"><div class="bar" style="height:62%;"></div><div class="bar-label">Abr</div></div>
+            <div class="bar-group"><div class="bar" style="height:80%;"></div><div class="bar-label">Mai</div></div>
+            <div class="bar-group"><div class="bar filled" style="height:91%;"></div><div class="bar-label">Jun</div></div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:22px;">
+          <h3 style="font-size:15px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; font-family:'Outfit',sans-serif;">
+            Clientes em aberto
+            <span id="open-total" style="font-family:'JetBrains Mono'; font-size:13px; color:var(--alert); font-weight:700;">R$ 0</span>
+          </h3>
+          <div class="open-list" id="open-list"></div>
+        </div>
+      </div>
+
+      <div class="fin-tabs">
+        <button class="fin-tab active" data-tab="por-cliente">Por cliente</button>
+        <button class="fin-tab" data-tab="contas-pagar">Contas a pagar</button>
+        <button class="fin-tab" data-tab="historico">Histórico de pagamentos</button>
+        <button class="fin-tab" data-tab="notas">Notas fiscais</button>
+      </div>
+
+      <div id="fin-tab-content"></div>
+    </section>
+
+    <!-- ===================== PRONTUÁRIOS ===================== -->
+    <section class="page" id="page-prontuarios">
+      <div id="prontuario-list-view">
+        <div class="page-header">
+          <div>
+            <h1>Prontuários</h1>
+            <p>Registro clínico por sessão, protegido por senha.</p>
+          </div>
+          <button class="btn btn-ghost" id="btn-ver-compilado">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+            Ver compilado geral
+          </button>
+        </div>
+
+        <div class="clients-toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+            <input type="text" id="prontuario-search" placeholder="Buscar cliente por nome...">
+          </div>
+        </div>
+
+        <div class="clients-grid" id="prontuario-grid"></div>
+      </div>
+
+      <div id="prontuario-detail-view" style="display:none;"></div>
+      <div id="prontuario-compilado-view" style="display:none;"></div>
+    </section>
+
+    <!-- ===================== ATESTADOS ===================== -->
+    <section class="page" id="page-atestados">
+      <div id="atestado-list-view">
+        <div class="page-header">
+          <div>
+            <h1>Atestados</h1>
+            <p>Crie, edite e imprima atestados e declarações.</p>
+          </div>
+          <button class="btn btn-primary" id="btn-novo-atestado">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+            Novo atestado
+          </button>
+        </div>
+
+        <div id="atestado-grid" class="clients-grid"></div>
+      </div>
+
+      <div id="atestado-editor-view" style="display:none;"></div>
+    </section>
+
+    <!-- ===================== CONFIGURAÇÕES ===================== -->
+    <section class="page" id="page-configuracoes">
+      <div class="page-header">
+        <div>
+          <h1>Configurações</h1>
+          <p>Personalize o sistema do jeito que funciona melhor pra você.</p>
+        </div>
+      </div>
+
+      <div class="settings-layout">
+        <nav class="settings-nav">
+          <button class="settings-nav-item active" data-settings-tab="perfil">Perfil</button>
+          <button class="settings-nav-item" data-settings-tab="aparencia">Aparência</button>
+          <button class="settings-nav-item" data-settings-tab="agenda">Agenda</button>
+          <button class="settings-nav-item" data-settings-tab="notificacoes">Notificações</button>
+          <button class="settings-nav-item" data-settings-tab="consultorio">Consultório</button>
+          <button class="settings-nav-item" data-settings-tab="mensagens">Mensagens</button>
+          <button class="settings-nav-item" data-settings-tab="seguranca">Segurança</button>
+          <button class="settings-nav-item" data-settings-tab="dados">Dados e backup</button>
+          <button class="settings-nav-item" data-settings-tab="sobre">Sobre</button>
+        </nav>
+
+        <div class="settings-content">
+
+          <!-- ---------- PERFIL ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-perfil">
+            <div class="card settings-card">
+              <h3>Foto de perfil</h3>
+              <div class="settings-photo-row">
+                <div class="settings-avatar-preview" id="settings-avatar-preview">ND</div>
+                <div class="settings-photo-actions">
+                  <input type="file" id="avatar-file-input" accept="image/*" style="display:none;">
+                  <button class="btn btn-ghost btn-sm" id="btn-upload-photo">Enviar foto</button>
+                  <button class="btn-danger-text" id="btn-remove-photo" style="display:none;">Remover foto</button>
+                  <p class="settings-hint">JPG ou PNG. A foto fica visível só durante esta sessão de uso.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card settings-card">
+              <h3>Dados do perfil</h3>
+              <form id="form-settings-profile">
+                <div class="field" style="margin-bottom:16px;">
+                  <label>Nome completo</label>
+                  <input type="text" id="set-name" placeholder="Seu nome completo">
+                </div>
+                <div class="field" style="margin-bottom:16px;">
+                  <label>Especialidade / título profissional</label>
+                  <input type="text" id="set-role" placeholder="Ex: Psicólogo, Nutricionista, Personal Trainer...">
+                </div>
+                <div class="field" style="margin-bottom:4px;">
+                  <label>Iniciais do avatar (usadas quando não há foto)</label>
+                  <input type="text" id="set-initials" maxlength="2" placeholder="Ex: ND" style="max-width:100px; text-transform:uppercase;">
+                </div>
+                <div class="settings-footer">
+                  <span class="save-hint" id="settings-save-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                    Salvo
+                  </span>
+                  <button type="submit" class="btn btn-primary btn-sm">Salvar alterações</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card settings-card">
+              <h3>Logo para atestados</h3>
+              <p class="settings-hint" style="margin-bottom:16px;">Aparece no topo dos atestados impressos. Opcional.</p>
+              <div class="settings-photo-row">
+                <div class="settings-avatar-preview" id="certificate-logo-preview" style="border-radius:10px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                </div>
+                <div class="settings-photo-actions">
+                  <input type="file" id="certificate-logo-input" accept="image/*" style="display:none;">
+                  <button class="btn btn-ghost btn-sm" id="btn-upload-certificate-logo">Enviar logo</button>
+                  <button class="btn-danger-text" id="btn-remove-certificate-logo" style="display:none;">Remover logo</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- APARÊNCIA ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-aparencia" style="display:none;">
+            <div class="card settings-card">
+              <h3>Tema</h3>
+              <p class="settings-hint" style="margin-bottom:18px;">Escolha como o sistema aparece para você.</p>
+              <div class="theme-options" id="theme-options">
+                <div class="theme-option" data-theme-value="light">
+                  <div class="theme-preview theme-preview-light">
+                    <span class="tp-bar"></span><span class="tp-dot"></span>
+                  </div>
+                  <span class="theme-option-label">Claro</span>
+                </div>
+                <div class="theme-option" data-theme-value="dark">
+                  <div class="theme-preview theme-preview-dark">
+                    <span class="tp-bar"></span><span class="tp-dot"></span>
+                  </div>
+                  <span class="theme-option-label">Escuro</span>
+                </div>
+                <div class="theme-option" data-theme-value="system">
+                  <div class="theme-preview theme-preview-system">
+                    <span class="tp-bar"></span><span class="tp-dot"></span>
+                  </div>
+                  <span class="theme-option-label">Automático</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- AGENDA ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-agenda" style="display:none;">
+            <div class="card settings-card">
+              <h3>Horário de atendimento</h3>
+              <form id="form-settings-agenda">
+                <div class="field-row" style="margin-bottom:16px;">
+                  <div class="field"><label>Início do expediente</label><input type="time" id="set-work-start" value="08:00"></div>
+                  <div class="field"><label>Fim do expediente</label><input type="time" id="set-work-end" value="18:00"></div>
+                </div>
+                <div class="field" style="margin-bottom:16px;">
+                  <label>Duração padrão da sessão</label>
+                  <select id="set-session-duration">
+                    <option value="30">30 minutos</option>
+                    <option value="45">45 minutos</option>
+                    <option value="50" selected>50 minutos</option>
+                    <option value="60">60 minutos</option>
+                  </select>
+                </div>
+                <div class="field" style="margin-bottom:4px;">
+                  <label>Dias de atendimento</label>
+                  <div class="radio-group" id="set-work-days">
+                    <div class="radio-pill selected" data-day="Segunda">Seg</div>
+                    <div class="radio-pill selected" data-day="Terça">Ter</div>
+                    <div class="radio-pill selected" data-day="Quarta">Qua</div>
+                    <div class="radio-pill selected" data-day="Quinta">Qui</div>
+                    <div class="radio-pill selected" data-day="Sexta">Sex</div>
+                    <div class="radio-pill" data-day="Sábado">Sáb</div>
+                  </div>
+                </div>
+                <div class="settings-footer">
+                  <span class="save-hint saved" id="agenda-save-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                    Salvo
+                  </span>
+                  <button type="submit" class="btn btn-primary btn-sm">Salvar alterações</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card settings-card">
+              <h3>Pacotes de sessões</h3>
+              <p class="settings-hint" style="margin-bottom:16px;">Defina quando um cliente deve aparecer no alerta de pacote acabando, na Agenda.</p>
+              <form id="form-settings-packages">
+                <div class="field" style="margin-bottom:4px; max-width:220px;">
+                  <label>Avisar quando restarem</label>
+                  <select id="set-package-threshold">
+                    <option value="1">1 sessão</option>
+                    <option value="2" selected>2 sessões</option>
+                    <option value="3">3 sessões</option>
+                    <option value="4">4 sessões</option>
+                    <option value="5">5 sessões</option>
+                  </select>
+                </div>
+                <div class="settings-footer">
+                  <span class="save-hint saved" id="packages-save-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                    Salvo
+                  </span>
+                  <button type="submit" class="btn btn-primary btn-sm">Salvar alterações</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- ---------- NOTIFICAÇÕES ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-notificacoes" style="display:none;">
+            <div class="card settings-card">
+              <h3>Lembretes</h3>
+              <p class="settings-hint" style="margin-bottom:18px;">Escolha quais avisos você quer receber dentro do sistema.</p>
+
+              <div class="toggle-row">
+                <div>
+                  <div class="toggle-row-title">Lembrete de sessão</div>
+                  <div class="toggle-row-desc">Avisar antes de cada consulta agendada</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif-session" checked><span class="switch-track"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <div class="toggle-row-title">Lembrete de pagamento pendente</div>
+                  <div class="toggle-row-desc">Avisar sobre clientes com pagamentos em aberto</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif-payment" checked><span class="switch-track"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <div class="toggle-row-title">Lembrete de conta a pagar</div>
+                  <div class="toggle-row-desc">Avisar sobre contas próximas do vencimento</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif-bills" checked><span class="switch-track"></span></label>
+              </div>
+              <div class="toggle-row" style="border-bottom:none;">
+                <div>
+                  <div class="toggle-row-title">Resumo semanal</div>
+                  <div class="toggle-row-desc">Um panorama da semana toda segunda-feira</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif-weekly"><span class="switch-track"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- CONSULTÓRIO ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-consultorio" style="display:none;">
+            <div class="card settings-card">
+              <h3>Dados do consultório</h3>
+              <form id="form-settings-office">
+                <div class="field" style="margin-bottom:16px;">
+                  <label>Endereço</label>
+                  <input type="text" id="set-address" placeholder="Rua, número, bairro, cidade">
+                </div>
+                <div class="field-row" style="margin-bottom:16px;">
+                  <div class="field"><label>Valor padrão da sessão (R$)</label><input type="number" min="0" id="set-default-value" placeholder="210"></div>
+                  <div class="field"><label>Chave PIX</label><input type="text" id="set-pix" placeholder="E-mail, telefone ou chave aleatória"></div>
+                </div>
+                <div class="settings-footer">
+                  <span class="save-hint saved" id="office-save-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                    Salvo
+                  </span>
+                  <button type="submit" class="btn btn-primary btn-sm">Salvar alterações</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- ---------- MENSAGENS ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-mensagens" style="display:none;">
+            <div class="card settings-card" style="max-width:620px;">
+              <h3>Modelo de cobrança</h3>
+              <p class="settings-hint" style="margin-bottom:12px;">Este texto é usado como ponto de partida toda vez que você cobra um cliente pelo WhatsApp. Você ainda pode ajustar o texto final na hora de enviar.</p>
+              <form id="form-template-charge">
+                <textarea class="notes-textarea template-textarea" id="tpl-charge" rows="8"></textarea>
+                <div class="template-placeholder-list" id="tpl-charge-placeholders"></div>
+                <div class="settings-footer">
+                  <span class="save-hint saved" id="tpl-charge-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                    Salvo
+                  </span>
+                  <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-ghost btn-sm" id="tpl-charge-reset">Restaurar padrão</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Salvar modelo</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div class="card settings-card" style="max-width:620px;">
+              <h3>Modelo de confirmação de consulta</h3>
+              <p class="settings-hint" style="margin-bottom:12px;">Usado quando você clica em "Confirmar pelo WhatsApp" em uma consulta agendada.</p>
+              <form id="form-template-confirmation">
+                <textarea class="notes-textarea template-textarea" id="tpl-confirmation" rows="8"></textarea>
+                <div class="template-placeholder-list" id="tpl-confirmation-placeholders"></div>
+                <div class="settings-footer">
+                  <span class="save-hint saved" id="tpl-confirmation-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                    Salvo
+                  </span>
+                  <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-ghost btn-sm" id="tpl-confirmation-reset">Restaurar padrão</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Salvar modelo</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div class="card settings-card" style="max-width:620px;">
+              <h3>Modelo de pacote acabando</h3>
+              <p class="settings-hint" style="margin-bottom:12px;">Usado quando você envia um aviso de pacote de sessões perto do fim, direto da Agenda.</p>
+              <form id="form-template-package">
+                <textarea class="notes-textarea template-textarea" id="tpl-package" rows="8"></textarea>
+                <div class="template-placeholder-list" id="tpl-package-placeholders"></div>
+                <div class="settings-footer">
+                  <span class="save-hint saved" id="tpl-package-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                    Salvo
+                  </span>
+                  <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-ghost btn-sm" id="tpl-package-reset">Restaurar padrão</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Salvar modelo</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- ---------- SEGURANÇA ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-seguranca" style="display:none;">
+            <div class="card settings-card">
+              <h3>Senha dos prontuários</h3>
+              <p class="settings-hint" style="margin-bottom:16px;" id="security-status-text">Nenhuma senha definida nesta sessão ainda.</p>
+              <div id="security-action-area"></div>
+            </div>
+          </div>
+
+          <!-- ---------- DADOS E BACKUP ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-dados" style="display:none;">
+            <div class="card settings-card">
+              <h3>Exportar dados</h3>
+              <p class="settings-hint" style="margin-bottom:18px;">Baixe uma cópia de tudo que está cadastrado no sistema (clientes, agenda, financeiro e prontuários) em formato JSON.</p>
+              <button class="btn btn-ghost" id="btn-export-data">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                Baixar backup (.json)
+              </button>
+            </div>
+            <div class="card settings-card" style="border-color:var(--alert);">
+              <h3 style="color:var(--alert);">Zona de risco</h3>
+              <p class="settings-hint" style="margin-bottom:18px;">Esta ação apaga todos os dados desta sessão (clientes, consultas, prontuários e financeiro). Não pode ser desfeita.</p>
+              <button class="btn-danger-text" id="btn-clear-data" style="font-size:14px;">Limpar todos os dados</button>
+            </div>
+          </div>
+
+          <!-- ---------- SOBRE ---------- -->
+          <div class="settings-tab-panel" id="settings-tab-sobre" style="display:none;">
+            <div class="card settings-card">
+              <h3>Sobre o Alinha</h3>
+              <p class="settings-hint" style="margin-bottom:18px;">Gestão Inteligente para Atendimentos — agenda, clientes e financeiro em um só lugar.</p>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <a href="termos.html" target="_blank" rel="noopener" class="btn btn-ghost" style="justify-content:flex-start;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                  Termos de Uso
+                </a>
+                <a href="privacidade.html" target="_blank" rel="noopener" class="btn btn-ghost" style="justify-content:flex-start;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  Política de Privacidade
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===================== MODAIS (containers vazios, preenchidos via JS) ===================== -->
+<div id="modal-root"></div>
+<div id="modal-root-2"></div>
+<div id="toast-root"></div>
+<div id="print-area" class="print-only"></div>
+
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>
