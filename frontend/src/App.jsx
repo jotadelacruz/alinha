@@ -1,0 +1,38 @@
+import { Route, Routes } from 'react-router-dom'
+import { RequireAuth } from './components/RequireAuth'
+import AgendaPage from './pages/AgendaPage'
+import AppShell from './pages/AppShell'
+import AtestadosPage from './pages/AtestadosPage'
+import ClientesPage from './pages/ClientesPage'
+import ConfiguracoesPage from './pages/ConfiguracoesPage'
+import FinanceiroPage from './pages/FinanceiroPage'
+import LoginPage from './pages/LoginPage'
+import PlaceholderPage from './pages/PlaceholderPage'
+import ProntuariosPage from './pages/ProntuariosPage'
+import './App.css'
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LoginPage />} />
+      <Route
+        path="/app"
+        element={
+          <RequireAuth>
+            <AppShell />
+          </RequireAuth>
+        }
+      >
+        <Route index element={<PlaceholderPage title="Resumo" />} />
+        <Route path="agenda" element={<AgendaPage />} />
+        <Route path="clientes" element={<ClientesPage />} />
+        <Route path="financeiro" element={<FinanceiroPage />} />
+        <Route path="prontuarios" element={<ProntuariosPage />} />
+        <Route path="atestados" element={<AtestadosPage />} />
+        <Route path="configuracoes" element={<ConfiguracoesPage />} />
+      </Route>
+    </Routes>
+  )
+}
+
+export default App
