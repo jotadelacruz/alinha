@@ -9,7 +9,6 @@ import FinanceiroPage from './pages/FinanceiroPage'
 import LoginPage from './pages/LoginPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import ProntuariosPage from './pages/ProntuariosPage'
-import './App.css'
 
 function App() {
   return (
