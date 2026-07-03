@@ -160,3 +160,33 @@ def test_prontuario_password_set_and_verify():
 
     right = client.post("/profile/prontuario-password/verify", json={"password": "segredo123"})
     assert right.json() == {"valid": True}
+
+
+def test_prontuario_password_legacy_sha256_hash_still_works():
+    """Contas migradas do app antigo têm o hash em SHA-256 (data.js), não bcrypt."""
+    import hashlib
+
+    from app.core.database import SessionLocal
+    from app.models.models import Profile
+
+    legacy_hash = hashlib.sha256("senhaAntiga".encode("utf-8")).hexdigest()
+    db = SessionLocal()
+    db.query(Profile).filter(Profile.id == TEST_USER_ID).update({"prontuario_password_hash": legacy_hash})
+    db.commit()
+    db.close()
+
+    wrong = client.post("/profile/prontuario-password/verify", json={"password": "chuta"})
+    assert wrong.json() == {"valid": False}
+
+    right = client.post("/profile/prontuario-password/verify", json={"password": "senhaAntiga"})
+    assert right.json() == {"valid": True}
+
+    # depois de verificar com sucesso, o hash deve ter sido migrado pra bcrypt
+    db = SessionLocal()
+    profile = db.query(Profile).filter(Profile.id == TEST_USER_ID).first()
+    assert profile.prontuario_password_hash.startswith("$2")
+    db.close()
+
+    # e continuar validando a mesma senha, agora via bcrypt
+    still_right = client.post("/profile/prontuario-password/verify", json={"password": "senhaAntiga"})
+    assert still_right.json() == {"valid": True}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { WEEK_DAYS } from '../lib/dateUtils';
+import { applyTheme } from '../lib/theme';
 
 export default function ConfiguracoesPage() {
   const [profile, setProfile] = useState(null);
@@ -89,7 +90,13 @@ export default function ConfiguracoesPage() {
 
         <section>
           <h3>Aparência</h3>
-          <select value={form.theme} onChange={(e) => setForm({ ...form, theme: e.target.value })}>
+          <select
+            value={form.theme}
+            onChange={(e) => {
+              setForm({ ...form, theme: e.target.value });
+              applyTheme(e.target.value);
+            }}
+          >
             <option value="light">Claro</option>
             <option value="dark">Escuro</option>
             <option value="system">Sistema</option>

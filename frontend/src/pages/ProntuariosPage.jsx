@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { isoDate } from '../lib/dateUtils';
+import { formatBR, isoDate } from '../lib/dateUtils';
 
 const EMPTY_RECORD_FORM = {
   date: isoDate(new Date()),
@@ -180,7 +180,7 @@ function ClientProntuario({ client, hasPassword, onPasswordCreated, onBack }) {
         {records.length === 0 && <p>Nenhum registro de sessão ainda.</p>}
         {records.map((r) => (
           <div key={r.id} className="record-card">
-            <strong>{r.date}</strong>
+            <strong>{formatBR(r.date)}</strong>
             {r.complaint && <p>Queixa: {r.complaint}</p>}
             {r.interventions && <p>Intervenções: {r.interventions}</p>}
             {r.observations && <p>Observações: {r.observations}</p>}

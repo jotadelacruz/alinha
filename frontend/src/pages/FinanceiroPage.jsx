@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { isoDate } from '../lib/dateUtils';
+import { formatBR, isoDate } from '../lib/dateUtils';
 
 const TODAY = new Date();
 const CURRENT_MONTH_ISO = isoDate(new Date(TODAY.getFullYear(), TODAY.getMonth(), 1));
@@ -286,7 +286,7 @@ export default function FinanceiroPage() {
               {bills.map((b) => (
                 <tr key={b.id}>
                   <td>{b.name}</td>
-                  <td>{b.dueDate}</td>
+                  <td>{formatBR(b.dueDate)}</td>
                   <td>{fmtBRL(b.amount)}</td>
                   <td>{b.status}</td>
                   <td>
@@ -317,7 +317,7 @@ export default function FinanceiroPage() {
               return (
                 <tr key={t.id}>
                   <td>{client ? client.name : 'Cliente removido'}</td>
-                  <td>{t.paymentDate}</td>
+                  <td>{formatBR(t.paymentDate)}</td>
                   <td>{t.paymentMethod}</td>
                   <td>{fmtBRL(t.amount)}</td>
                   <td>

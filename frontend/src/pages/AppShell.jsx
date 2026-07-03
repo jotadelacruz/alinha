@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { api } from '../lib/api';
+import { applyTheme } from '../lib/theme';
 import { useAuth } from '../context/AuthContext';
 
 const NAV_ITEMS = [
@@ -84,7 +85,13 @@ export default function AppShell() {
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    api.get('/profile').then(setProfile).catch(() => {});
+    api
+      .get('/profile')
+      .then((p) => {
+        setProfile(p);
+        applyTheme(p.settings.theme);
+      })
+      .catch(() => {});
   }, []);
 
   return (

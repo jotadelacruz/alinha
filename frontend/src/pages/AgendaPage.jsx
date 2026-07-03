@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api';
-import { TIME_SLOTS, WEEK_DAYS, addDays, isoDate, mondayOf } from '../lib/dateUtils';
+import { TIME_SLOTS, WEEK_DAYS, addDays, formatBR, isoDate, mondayOf } from '../lib/dateUtils';
 
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
@@ -112,7 +112,7 @@ export default function AgendaPage() {
         <button onClick={() => setWeekOffset(0)}>Hoje</button>
         <button onClick={() => setWeekOffset((v) => v + 1)}>Próxima semana →</button>
         <span>
-          {isoDate(weekDates[0])} a {isoDate(weekDates[weekDates.length - 1])}
+          {formatBR(isoDate(weekDates[0]))} a {formatBR(isoDate(weekDates[weekDates.length - 1]))}
         </span>
       </div>
 
@@ -188,7 +188,7 @@ export default function AgendaPage() {
         <div className="appt-detail">
           <h4>{clientById(selected.clientId)?.name}</h4>
           <p>
-            {selected.dateIso} às {selected.time}
+            {formatBR(selected.dateIso)} às {selected.time}
           </p>
           <div>
             <button onClick={() => handleStatusChange(selected, 'confirmed')}>Marcar confirmada</button>

@@ -90,4 +90,6 @@ def set_password(
 def verify_password(
     body: ProntuarioPasswordIn, user_id: uuid.UUID = Depends(get_current_user_id), db: Session = Depends(get_db)
 ):
-    return {"valid": verify_prontuario_password(db, user_id, body.password)}
+    valid = verify_prontuario_password(db, user_id, body.password)
+    db.commit()  # persiste a migração silenciosa de hash legado (SHA-256) pra bcrypt, se houve
+    return {"valid": valid}

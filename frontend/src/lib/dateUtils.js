@@ -20,3 +20,10 @@ export function mondayOf(d) {
   const diff = dow === 0 ? -6 : 1 - dow;
   return addDays(r, diff);
 }
+
+/** Formata uma data ISO (YYYY-MM-DD) no padrão brasileiro DD/MM/AAAA. */
+export function formatBR(isoStr) {
+  if (!isoStr) return '';
+  const [y, m, d] = isoStr.split('-');
+  return `${d}/${m}/${y}`;
+}
