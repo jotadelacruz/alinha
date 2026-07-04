@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { colorFor, initials } from '../lib/avatar';
 import { formatBR, isoDate } from '../lib/dateUtils';
 
 const EMPTY_RECORD_FORM = {
@@ -236,9 +237,24 @@ export default function ProntuariosPage() {
       <div className="client-grid">
         {filtered.map((c) => (
           <div key={c.id} className="client-card" onClick={() => setSelectedClient(c)}>
-            <div className="client-name">{c.name}</div>
-            <div>{c.status === 'ativo' ? 'Ativo' : 'Em pausa'}</div>
-            <div>Ver prontuário →</div>
+            <div className="client-top">
+              <div className="client-avatar" style={{ background: colorFor(c.name) }}>
+                {initials(c.name)}
+              </div>
+              <div>
+                <div className="client-name">
+                  <span style={{ marginRight: 6 }} aria-hidden="true">
+                    📋
+                  </span>
+                  {c.name}
+                </div>
+                <div className="client-since">Cliente desde {formatBR(c.since)}</div>
+              </div>
+            </div>
+            <div className="client-footer">
+              <span className={`client-status ${c.status}`}>{c.status === 'ativo' ? 'Ativo' : 'Em pausa'}</span>
+              <span className="next-session">Ver prontuário →</span>
+            </div>
           </div>
         ))}
         {filtered.length === 0 && <p>Nenhum cliente encontrado.</p>}
