@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api';
 import { TIME_SLOTS, WEEK_DAYS, addDays, formatBR, isoDate, mondayOf } from '../lib/dateUtils';
+import { confirmationMessage, whatsappLink } from '../lib/whatsapp';
 
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
@@ -273,6 +274,21 @@ export default function AgendaPage() {
             <button onClick={() => handleStatusChange(selected, 'confirmed')}>Marcar confirmada</button>
             <button onClick={() => handleStatusChange(selected, 'pending')}>Marcar a confirmar</button>
           </div>
+          {clientById(selected.clientId)?.phone ? (
+            <a
+              className="whatsapp-confirm-btn"
+              href={whatsappLink(
+                clientById(selected.clientId).phone,
+                confirmationMessage(clientById(selected.clientId).name, selected.dateIso, selected.time)
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Confirmar por WhatsApp
+            </a>
+          ) : (
+            <p className="whatsapp-no-phone">Cadastre o telefone do cliente para confirmar por WhatsApp.</p>
+          )}
           <button onClick={() => handleDelete(selected)}>Cancelar esta consulta</button>
           {selected.recurrenceId && (
             <button onClick={() => handleDeleteSeries(selected)}>Cancelar série recorrente futura</button>
