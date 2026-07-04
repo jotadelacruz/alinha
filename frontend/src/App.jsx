@@ -9,6 +9,7 @@ import FinanceiroPage from './pages/FinanceiroPage'
 import LoginPage from './pages/LoginPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import ProntuariosPage from './pages/ProntuariosPage'
+import ResumoPage from './pages/ResumoPage'
 
 function App() {
   return (
@@ -22,7 +23,7 @@ function App() {
           </RequireAuth>
         }
       >
-        <Route index element={<PlaceholderPage title="Resumo" />} />
+        <Route index element={<ResumoPage />} />
         <Route path="agenda" element={<AgendaPage />} />
         <Route path="clientes" element={<ClientesPage />} />
         <Route path="financeiro" element={<FinanceiroPage />} />
