@@ -72,7 +72,7 @@ export default function ResumoPage() {
       <header>
         <div>
           <h2>Resumo</h2>
-          <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginTop: -12, marginBottom: 12 }}>{dateLabel}</p>
+          <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginTop: 4, marginBottom: 0 }}>{dateLabel}</p>
         </div>
       </header>
       {error && <p className="error">{error}</p>}
