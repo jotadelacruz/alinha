@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.models.models import Client
-from app.schemas.schemas import ClientCreate, ClientOut
+from app.schemas.schemas import ClientCreate, ClientOut, ClientStatusIn
 from app.services.appointment_service import generate_recurring_appointments_for_client
 
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -27,6 +27,9 @@ def _to_out(c: Client) -> ClientOut:
         value=float(c.session_value),
         status=c.status,
         notes=c.notes or "",
+        cpf=c.cpf or "",
+        address=c.address or "",
+        session_duration=c.session_duration,
     )
 
 
@@ -41,6 +44,9 @@ def _apply(client: Client, body: ClientCreate) -> None:
     client.session_value = body.value
     client.status = body.status
     client.notes = body.notes
+    client.cpf = body.cpf
+    client.address = body.address
+    client.session_duration = body.session_duration
 
 
 @router.get("", response_model=list[ClientOut], response_model_by_alias=True)
@@ -74,6 +80,22 @@ def update_client(
     _apply(client, body)
     db.flush()
     generate_recurring_appointments_for_client(db, user_id, client, datetime.date.today())
+    db.commit()
+    db.refresh(client)
+    return _to_out(client)
+
+
+@router.patch("/{client_id}/status", response_model=ClientOut, response_model_by_alias=True)
+def update_client_status(
+    client_id: uuid.UUID,
+    body: ClientStatusIn,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    client = db.query(Client).filter(Client.id == client_id, Client.owner_id == user_id).first()
+    if not client:
+        raise HTTPException(404, "Cliente não encontrado")
+    client.status = body.status
     db.commit()
     db.refresh(client)
     return _to_out(client)

@@ -64,6 +64,9 @@ class Client(Base):
     session_value: Mapped[float] = mapped_column(Numeric, default=210)
     status: Mapped[str] = mapped_column(Text, default="ativo")
     notes: Mapped[str | None] = mapped_column(Text, default="")
+    cpf: Mapped[str | None] = mapped_column(Text, nullable=True)
+    address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    session_duration: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

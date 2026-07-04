@@ -102,6 +102,9 @@ class ClientBase(CamelModel):
     value: float
     status: str = "ativo"
     notes: str = ""
+    cpf: str = ""
+    address: str = ""
+    session_duration: int | None = None
 
 
 class ClientCreate(ClientBase):
@@ -111,6 +114,10 @@ class ClientCreate(ClientBase):
 class ClientOut(ClientBase):
     id: uuid.UUID
     since: datetime.date
+
+
+class ClientStatusIn(CamelModel):
+    status: str
 
 
 # ---------- Appointments ----------

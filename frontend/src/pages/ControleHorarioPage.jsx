@@ -25,7 +25,7 @@ export default function ControleHorarioPage() {
     typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
   );
   const notifiedRef = useRef(false);
-  const sessionDuration = profile?.settings?.agenda?.sessionDuration || 50;
+  const defaultSessionDuration = profile?.settings?.agenda?.sessionDuration || 50;
 
   useEffect(() => {
     async function load() {
@@ -52,6 +52,7 @@ export default function ControleHorarioPage() {
   }, [session]);
 
   const client = session ? clients.find((c) => c.id === session.clientId) : null;
+  const sessionDuration = client?.sessionDuration || defaultSessionDuration;
   const elapsedSeconds = session ? Math.floor((now - session.startedAt) / 1000) : 0;
   const totalSeconds = sessionDuration * 60;
   const remaining = totalSeconds - elapsedSeconds;

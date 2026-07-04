@@ -1,19 +1,122 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
 import { downloadImportTemplate, exportClientsCSV, parseCSV, parseClientRows } from '../lib/csv';
+import { formatBR } from '../lib/dateUtils';
 
 const EMPTY_FORM = {
   name: '',
   phone: '',
   email: '',
+  cpf: '',
+  address: '',
   frequency: 'Semanal',
   day: '-',
   time: '-',
   modality: 'Presencial',
   value: 210,
+  sessionDuration: '',
   status: 'ativo',
   notes: '',
 };
+
+function ClientDetail({ client, onBack, onSaved, onDeleted }) {
+  const [form, setForm] = useState({
+    name: client.name || '',
+    phone: client.phone || '',
+    email: client.email || '',
+    cpf: client.cpf || '',
+    address: client.address || '',
+    frequency: client.frequency || 'Semanal',
+    day: client.day || '-',
+    time: client.time || '-',
+    modality: client.modality || 'Presencial',
+    value: client.value,
+    sessionDuration: client.sessionDuration ?? '',
+    status: client.status || 'ativo',
+    notes: client.notes || '',
+  });
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.put(`/clients/${client.id}`, {
+        ...form,
+        sessionDuration: form.sessionDuration === '' ? null : Number(form.sessionDuration),
+      });
+      onSaved();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm('Excluir este cliente?')) return;
+    await api.delete(`/clients/${client.id}`);
+    onDeleted();
+  }
+
+  return (
+    <div>
+      <header>
+        <button onClick={onBack}>← Voltar</button>
+        <h3 style={{ flex: 1 }}>{client.name}</h3>
+      </header>
+      {error && <p className="error">{error}</p>}
+      <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 16 }}>Cliente desde {formatBR(client.since)}</p>
+
+      <form onSubmit={handleSave} className="client-form">
+        <input placeholder="Nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+        <input placeholder="Telefone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        <input placeholder="E-mail" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        <input placeholder="CPF" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} />
+        <input
+          placeholder="Endereço"
+          value={form.address}
+          onChange={(e) => setForm({ ...form, address: e.target.value })}
+        />
+        <input
+          placeholder="Valor por consulta"
+          type="number"
+          value={form.value}
+          onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
+          required
+        />
+        <input
+          placeholder="Duração personalizada (min)"
+          type="number"
+          value={form.sessionDuration}
+          onChange={(e) => setForm({ ...form, sessionDuration: e.target.value })}
+        />
+        <select value={form.frequency} onChange={(e) => setForm({ ...form, frequency: e.target.value })}>
+          <option value="Semanal">Semanal</option>
+          <option value="Quinzenal">Quinzenal</option>
+          <option value="Mensal">Mensal</option>
+          <option value="Pausada">Pausada</option>
+        </select>
+        <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+          <option value="ativo">Ativo</option>
+          <option value="pausa">Em pausa</option>
+        </select>
+        <textarea
+          placeholder="Observações"
+          value={form.notes}
+          onChange={(e) => setForm({ ...form, notes: e.target.value })}
+        />
+        <button type="submit" disabled={saving}>
+          {saving ? 'Salvando...' : 'Salvar alterações'}
+        </button>
+        <button type="button" onClick={handleDelete}>
+          Excluir cliente
+        </button>
+      </form>
+    </div>
+  );
+}
 
 export default function ClientesPage() {
   const [clients, setClients] = useState([]);
@@ -24,6 +127,7 @@ export default function ClientesPage() {
   const [showImport, setShowImport] = useState(false);
   const [importResult, setImportResult] = useState(null); // { valid, skipped, headerError }
   const [importing, setImporting] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -44,7 +148,7 @@ export default function ClientesPage() {
   async function handleCreate(e) {
     e.preventDefault();
     try {
-      await api.post('/clients', form);
+      await api.post('/clients', { ...form, sessionDuration: form.sessionDuration === '' ? null : Number(form.sessionDuration) });
       setForm(EMPTY_FORM);
       setShowForm(false);
       await reload();
@@ -57,6 +161,15 @@ export default function ClientesPage() {
     if (!confirm('Excluir este cliente?')) return;
     await api.delete(`/clients/${id}`);
     await reload();
+  }
+
+  async function handleStatusChange(id, status) {
+    try {
+      await api.patch(`/clients/${id}/status`, { status });
+      await reload();
+    } catch (e) {
+      setError(e.message);
+    }
   }
 
   function handleFileSelected(e) {
@@ -96,6 +209,23 @@ export default function ClientesPage() {
   }
 
   if (loading) return <p>Carregando clientes…</p>;
+
+  if (selectedClient) {
+    return (
+      <ClientDetail
+        client={selectedClient}
+        onBack={() => setSelectedClient(null)}
+        onSaved={() => {
+          setSelectedClient(null);
+          reload();
+        }}
+        onDeleted={() => {
+          setSelectedClient(null);
+          reload();
+        }}
+      />
+    );
+  }
 
   return (
     <div>
@@ -206,12 +336,24 @@ export default function ClientesPage() {
             required
           />
           <input placeholder="Telefone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <input placeholder="CPF" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} />
           <input
-            placeholder="Valor da sessão"
+            placeholder="Endereço"
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+          />
+          <input
+            placeholder="Valor por consulta"
             type="number"
             value={form.value}
             onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
             required
+          />
+          <input
+            placeholder="Duração personalizada (min)"
+            type="number"
+            value={form.sessionDuration}
+            onChange={(e) => setForm({ ...form, sessionDuration: e.target.value })}
           />
           <button type="submit">Salvar</button>
         </form>
@@ -230,10 +372,17 @@ export default function ClientesPage() {
         <tbody>
           {clients.map((c) => (
             <tr key={c.id}>
-              <td>{c.name}</td>
+              <td onClick={() => setSelectedClient(c)} style={{ cursor: 'pointer' }}>
+                {c.name}
+              </td>
               <td>{c.frequency}</td>
               <td>R$ {c.value}</td>
-              <td>{c.status}</td>
+              <td>
+                <select value={c.status} onChange={(e) => handleStatusChange(c.id, e.target.value)}>
+                  <option value="ativo">Ativo</option>
+                  <option value="pausa">Em pausa</option>
+                </select>
+              </td>
               <td>
                 <button onClick={() => handleDelete(c.id)}>Excluir</button>
               </td>
