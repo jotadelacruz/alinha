@@ -4,11 +4,14 @@ import { TIME_SLOTS, WEEK_DAYS, addDays, formatBR, isoDate, mondayOf } from '../
 
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
+const TODAY_ISO = isoDate(TODAY);
+const ROW_HEIGHT = 64;
 
 const EMPTY_FORM = { clientId: '', dateIso: '', time: '08:00', modality: 'Presencial', status: 'confirmed' };
 
 export default function AgendaPage() {
   const [weekOffset, setWeekOffset] = useState(0);
+  const [view, setView] = useState('grade'); // 'grade' | 'lista'
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -91,6 +94,11 @@ export default function AgendaPage() {
     await reload();
   }
 
+  function apptClass(a) {
+    if (a.modality === 'Online') return 'online';
+    return a.status === 'pending' ? 'pending' : 'confirmed';
+  }
+
   const grouped = {};
   [...appointments]
     .sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.time.localeCompare(b.time))
@@ -114,6 +122,14 @@ export default function AgendaPage() {
         <span>
           {formatBR(isoDate(weekDates[0]))} a {formatBR(isoDate(weekDates[weekDates.length - 1]))}
         </span>
+        <div className="view-toggle">
+          <button className={view === 'grade' ? 'active' : ''} onClick={() => setView('grade')}>
+            Grade
+          </button>
+          <button className={view === 'lista' ? 'active' : ''} onClick={() => setView('lista')}>
+            Lista
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -155,6 +171,69 @@ export default function AgendaPage() {
 
       {loading ? (
         <p>Carregando agenda…</p>
+      ) : view === 'grade' ? (
+        <div className="week-grid">
+          <div className="head"></div>
+          {weekDates.map((d, i) => {
+            const dISO = isoDate(d);
+            return (
+              <div key={dISO} className={`head ${dISO === TODAY_ISO ? 'today' : ''}`}>
+                <div className="dow">{WEEK_DAYS[i].slice(0, 3)}</div>
+                <div className="dnum">{d.getDate()}</div>
+              </div>
+            );
+          })}
+
+          <div className="time-col">
+            {TIME_SLOTS.map((t) => (
+              <div key={t} className="time-cell">
+                {t}
+              </div>
+            ))}
+          </div>
+
+          {weekDates.map((d) => {
+            const dISO = isoDate(d);
+            const dayAppts = grouped[dISO] || [];
+            return (
+              <div key={dISO} className="day-col">
+                {TIME_SLOTS.map((t) => {
+                  const occupied = dayAppts.some((a) => a.time === t);
+                  return (
+                    <div
+                      key={t}
+                      className="slot"
+                      onClick={() => !occupied && openNewForm(dISO, t)}
+                      title={occupied ? undefined : `Agendar em ${formatBR(dISO)} às ${t}`}
+                    />
+                  );
+                })}
+                {dayAppts.map((a) => {
+                  const client = clientById(a.clientId);
+                  const rowIndex = TIME_SLOTS.indexOf(a.time);
+                  if (rowIndex === -1) return null;
+                  return (
+                    <button
+                      key={a.id}
+                      className={`appt-block ${apptClass(a)}`}
+                      style={{ top: rowIndex * ROW_HEIGHT + 4, height: ROW_HEIGHT - 8 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelected(a);
+                      }}
+                    >
+                      <div className="name">{client ? client.name : 'Cliente removido'}</div>
+                      <div className="time">
+                        {a.time}
+                        {a.modality === 'Online' ? ' · Online' : ''}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <div className="agenda-list">
           {weekDates.map((d, i) => {
@@ -165,7 +244,7 @@ export default function AgendaPage() {
               <div key={dISO}>
                 <h4>
                   {WEEK_DAYS[i]}-feira, {d.getDate()}
-                  {dISO === isoDate(TODAY) ? ' — hoje' : ''}
+                  {dISO === TODAY_ISO ? ' — hoje' : ''}
                 </h4>
                 {items.map((a) => {
                   const cl = clientById(a.clientId);

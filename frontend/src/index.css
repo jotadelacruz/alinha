@@ -460,6 +460,163 @@ textarea {
   color: var(--ink-soft);
 }
 
+.view-toggle {
+  display: flex;
+  background: var(--paper-soft);
+  border-radius: 9px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  gap: 0;
+}
+
+.view-toggle button {
+  border: none;
+  background: none;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.view-toggle button.active {
+  background: var(--white);
+  color: var(--navy);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: 56px repeat(5, 1fr);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--white);
+  margin-top: 16px;
+}
+
+.week-grid .head {
+  background: var(--paper-soft);
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.week-grid .head:first-child {
+  border-left: none;
+}
+
+.head .dow {
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.head .dnum {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.head.today {
+  background: var(--navy-wash);
+}
+
+.head.today .dnum {
+  color: var(--navy);
+}
+
+.time-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-cell {
+  height: 64px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-align: right;
+  padding: 4px 8px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.time-cell:first-child {
+  border-top: none;
+}
+
+.day-col {
+  position: relative;
+  border-left: 1px solid var(--line);
+}
+
+.slot {
+  height: 64px;
+  border-top: 1px solid var(--line);
+  transition: background 0.1s;
+  cursor: pointer;
+}
+
+.slot:first-child {
+  border-top: none;
+}
+
+.slot:hover {
+  background: var(--paper-soft);
+}
+
+.appt-block {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  border-radius: 8px;
+  padding: 6px 9px;
+  font-size: 12px;
+  line-height: 1.3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  overflow: hidden;
+  border-left: 3px solid var(--navy);
+  background: var(--navy-wash);
+  transition: filter 0.15s;
+  z-index: 2;
+  text-align: left;
+}
+
+.appt-block:hover {
+  filter: brightness(0.97);
+}
+
+.appt-block .name {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.appt-block .time {
+  color: var(--ink-soft);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  margin-top: 1px;
+}
+
+.appt-block.confirmed {
+  background: var(--sage-wash);
+  border-left-color: var(--sage);
+}
+
+.appt-block.pending {
+  background: var(--gold-wash);
+  border-left-color: var(--gold);
+}
+
+.appt-block.online {
+  background: var(--navy-wash);
+  border-left-color: var(--navy-light);
+}
+
 .agenda-list h4 {
   font-size: 12px;
   text-transform: uppercase;
