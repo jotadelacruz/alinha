@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { useProfile } from '../context/ProfileContext';
+import { useSessionTimer } from '../context/SessionTimerContext';
 import { isoDate } from '../lib/dateUtils';
 
 const TODAY_ISO = isoDate(new Date());
@@ -15,16 +16,15 @@ function formatClock(totalSeconds) {
 
 export default function ControleHorarioPage() {
   const { profile } = useProfile();
+  const { session, startSession, endSession } = useSessionTimer();
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState(null); // { clientId, time, startedAt }
   const [now, setNow] = useState(Date.now());
   const [notifPermission, setNotifPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
   );
-  const notifiedRef = useRef(false);
   const defaultSessionDuration = profile?.settings?.agenda?.sessionDuration || 50;
 
   useEffect(() => {
@@ -52,38 +52,19 @@ export default function ControleHorarioPage() {
   }, [session]);
 
   const client = session ? clients.find((c) => c.id === session.clientId) : null;
-  const sessionDuration = client?.sessionDuration || defaultSessionDuration;
+  const sessionDuration = session?.sessionDuration || defaultSessionDuration;
   const elapsedSeconds = session ? Math.floor((now - session.startedAt) / 1000) : 0;
   const totalSeconds = sessionDuration * 60;
   const remaining = totalSeconds - elapsedSeconds;
   const status = remaining <= 0 ? 'overtime' : remaining <= 300 ? 'warning' : 'normal';
 
-  useEffect(() => {
-    if (!session) {
-      notifiedRef.current = false;
-      return;
-    }
-    if (status === 'warning' && !notifiedRef.current) {
-      notifiedRef.current = true;
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification('Alinha — 5 minutos restantes', {
-          body: `A sessão com ${client ? client.name : 'o cliente'} está terminando em 5 minutos.`,
-        });
-      }
-    }
-  }, [status, session, client]);
-
   function requestNotificationPermission() {
     Notification.requestPermission().then(setNotifPermission);
   }
 
-  function startSession(clientId, time) {
-    notifiedRef.current = false;
-    setSession({ clientId, time, startedAt: Date.now() });
-  }
-
-  function endSession() {
-    setSession(null);
+  function handleStart(clientId, time) {
+    const c = clients.find((cl) => cl.id === clientId);
+    startSession(clientId, c?.name, time, c?.sessionDuration);
   }
 
   if (loading) return <p>Carregando…</p>;
@@ -115,12 +96,12 @@ export default function ControleHorarioPage() {
               {appointments.map((a) => {
                 const c = clients.find((cl) => cl.id === a.clientId);
                 return (
-                  <div key={a.id} className="timer-idle-item" onClick={() => startSession(a.clientId, a.time)}>
+                  <div key={a.id} className="timer-idle-item" onClick={() => handleStart(a.clientId, a.time)}>
                     <div>
                       <div style={{ fontWeight: 700 }}>{c ? c.name : 'Cliente removido'}</div>
                       <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>{a.time}</div>
                     </div>
-                    <button onClick={(e) => (e.stopPropagation(), startSession(a.clientId, a.time))}>
+                    <button onClick={(e) => (e.stopPropagation(), handleStart(a.clientId, a.time))}>
                       Iniciar consulta
                     </button>
                   </div>
@@ -133,7 +114,7 @@ export default function ControleHorarioPage() {
 
       {session && (
         <div className={`timer-card ${status}`}>
-          <div className="timer-client-name">{client ? client.name : 'Cliente'}</div>
+          <div className="timer-client-name">{client ? client.name : session.clientName || 'Cliente'}</div>
           <div className="timer-client-meta">
             Sessão das {session.time} · {sessionDuration} min
           </div>

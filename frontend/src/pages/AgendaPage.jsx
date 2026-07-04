@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useSessionTimer } from '../context/SessionTimerContext';
 import { TIME_SLOTS, WEEK_DAYS, addDays, formatBR, isoDate, mondayOf } from '../lib/dateUtils';
 import { confirmationMessage, whatsappLink } from '../lib/whatsapp';
 
@@ -11,6 +13,8 @@ const ROW_HEIGHT = 64;
 const EMPTY_FORM = { clientId: '', dateIso: '', time: '08:00', modality: 'Presencial', status: 'confirmed' };
 
 export default function AgendaPage() {
+  const navigate = useNavigate();
+  const { startSession } = useSessionTimer();
   const [weekOffset, setWeekOffset] = useState(0);
   const [view, setView] = useState('grade'); // 'grade' | 'lista'
   const [clients, setClients] = useState([]);
@@ -93,6 +97,12 @@ export default function AgendaPage() {
     await api.delete(`/appointments/recurrence/${appt.recurrenceId}`, { from_date_iso: isoDate(TODAY) });
     setSelected(null);
     await reload();
+  }
+
+  function handleStartSession(appt) {
+    const client = clientById(appt.clientId);
+    startSession(appt.clientId, client?.name, appt.time, client?.sessionDuration);
+    navigate('/app/controle-horario');
   }
 
   function apptClass(a) {
@@ -275,6 +285,9 @@ export default function AgendaPage() {
             <button onClick={() => handleStatusChange(selected, 'confirmed')}>Marcar confirmada</button>
             <button onClick={() => handleStatusChange(selected, 'pending')}>Marcar a confirmar</button>
           </div>
+          {selected.dateIso === TODAY_ISO && (
+            <button onClick={() => handleStartSession(selected)}>Iniciar consulta</button>
+          )}
           {clientById(selected.clientId)?.phone ? (
             <a
               className="whatsapp-confirm-btn"

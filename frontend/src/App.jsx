@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { RequireAuth } from './components/RequireAuth'
 import { ProfileProvider } from './context/ProfileContext'
+import { SessionTimerProvider } from './context/SessionTimerContext'
 import AgendaPage from './pages/AgendaPage'
 import AppShell from './pages/AppShell'
 import AtestadosPage from './pages/AtestadosPage'
@@ -22,7 +23,9 @@ function App() {
         element={
           <RequireAuth>
             <ProfileProvider>
-              <AppShell />
+              <SessionTimerProvider>
+                <AppShell />
+              </SessionTimerProvider>
             </ProfileProvider>
           </RequireAuth>
         }
