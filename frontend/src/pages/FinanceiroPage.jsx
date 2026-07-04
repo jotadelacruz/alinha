@@ -11,6 +11,34 @@ function fmtBRL(v) {
 
 const STATUS_LABEL = { pago: 'Pago', parcial: 'Parcial', aberto: 'Em aberto' };
 
+const BILL_CATEGORIES = [
+  'Aluguel',
+  'Água',
+  'Luz',
+  'Internet',
+  'Telefone',
+  'Material de consultório',
+  'Supervisão',
+  'Assinaturas/Software',
+  'Impostos',
+  'Outros',
+];
+
+const CATEGORY_ICONS = {
+  Aluguel: '🏠',
+  Água: '💧',
+  Luz: '⚡',
+  Internet: '🌐',
+  Telefone: '☎️',
+  'Material de consultório': '🗂️',
+  Supervisão: '🎓',
+  'Assinaturas/Software': '💳',
+  Impostos: '🧾',
+  Outros: '📦',
+};
+
+const MONTH_LABELS_SHORT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
 const EMPTY_PAYMENT_FORM = { amount: '', paymentDate: isoDate(TODAY), paymentMethod: 'PIX' };
 const EMPTY_BILL_FORM = { name: '', category: 'Outros', amount: '', dueDate: isoDate(TODAY), isFixed: false };
 
@@ -26,6 +54,7 @@ export default function FinanceiroPage() {
   const [paymentForm, setPaymentForm] = useState(EMPTY_PAYMENT_FORM);
   const [showBillForm, setShowBillForm] = useState(false);
   const [billForm, setBillForm] = useState(EMPTY_BILL_FORM);
+  const [monthlyHistory, setMonthlyHistory] = useState([]);
 
   useEffect(() => {
     loadAll();
@@ -52,6 +81,19 @@ export default function FinanceiroPage() {
         )
       );
       setFinances(Object.fromEntries(finPairs));
+
+      const months = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(TODAY.getFullYear(), TODAY.getMonth() - (5 - i), 1);
+        return { iso: isoDate(d), label: MONTH_LABELS_SHORT[d.getMonth()] };
+      });
+      const history = await Promise.all(
+        months.map(async (m) => {
+          const txs = await api.get('/payment-transactions', { reference_month_iso: m.iso });
+          const total = txs.reduce((sum, t) => sum + t.amount, 0);
+          return { ...m, total };
+        })
+      );
+      setMonthlyHistory(history);
     } catch (e) {
       setError(e.message);
     }
@@ -146,6 +188,49 @@ export default function FinanceiroPage() {
           </div>
         </div>
       )}
+
+      <div className="fin-summary">
+        <div className="card chart-card">
+          <h3>Recebimentos — últimos 6 meses</h3>
+          <div className="bars">
+            {monthlyHistory.map((m, i) => {
+              const max = Math.max(...monthlyHistory.map((x) => x.total), 1);
+              const heightPct = Math.max(4, Math.round((m.total / max) * 100));
+              return (
+                <div key={i} className="bar-group">
+                  <div className={`bar ${i === monthlyHistory.length - 1 ? 'filled' : ''}`} style={{ height: `${heightPct}%` }} title={fmtBRL(m.total)} />
+                  <div className="bar-label">{m.label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="card" style={{ padding: 22 }}>
+          <h3 style={{ fontSize: 15, marginBottom: 16 }}>Contas a receber pendentes do mês</h3>
+          <div className="open-list">
+            {Object.values(finances)
+              .filter((fin) => fin.balance > 0)
+              .map((fin) => {
+                const client = clients.find((c) => c.id === fin.clientId);
+                return (
+                  <div key={fin.clientId} className="open-item">
+                    <div>
+                      <div className="name">{client ? client.name : 'Cliente'}</div>
+                      <div className="since">{fin.status === 'parcial' ? 'Pagamento parcial' : 'Em aberto'}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div className="amt">{fmtBRL(fin.balance)}</div>
+                      <button onClick={() => setPayingClientId(fin.clientId)}>Registrar</button>
+                    </div>
+                  </div>
+                );
+              })}
+            {Object.values(finances).filter((fin) => fin.balance > 0).length === 0 && (
+              <p style={{ fontSize: 13, color: 'var(--ink-soft)', textAlign: 'center' }}>Nenhuma pendência no momento 🎉</p>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="tabs">
         <button onClick={() => setTab('por-cliente')} disabled={tab === 'por-cliente'}>
@@ -248,6 +333,16 @@ export default function FinanceiroPage() {
                 onChange={(e) => setBillForm({ ...billForm, name: e.target.value })}
                 required
               />
+              <select
+                value={billForm.category}
+                onChange={(e) => setBillForm({ ...billForm, category: e.target.value })}
+              >
+                {BILL_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {CATEGORY_ICONS[cat]} {cat}
+                  </option>
+                ))}
+              </select>
               <input
                 type="number"
                 step="0.01"
@@ -275,6 +370,7 @@ export default function FinanceiroPage() {
           <table>
             <thead>
               <tr>
+                <th>Categoria</th>
                 <th>Nome</th>
                 <th>Vencimento</th>
                 <th>Valor</th>
@@ -285,6 +381,7 @@ export default function FinanceiroPage() {
             <tbody>
               {bills.map((b) => (
                 <tr key={b.id}>
+                  <td>{CATEGORY_ICONS[b.category] || '📦'}</td>
                   <td>{b.name}</td>
                   <td>{formatBR(b.dueDate)}</td>
                   <td>{fmtBRL(b.amount)}</td>
