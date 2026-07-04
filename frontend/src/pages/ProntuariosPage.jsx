@@ -92,7 +92,7 @@ function PasswordGate({ hasPassword, targetLabel, onUnlock, onCancel }) {
   );
 }
 
-function ClientProntuario({ client, hasPassword, onPasswordCreated, onBack }) {
+function ClientProntuario({ client, hasPassword, onPasswordCreated, onBack, profile }) {
   const [unlocked, setUnlocked] = useState(false);
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -145,9 +145,12 @@ function ClientProntuario({ client, hasPassword, onPasswordCreated, onBack }) {
 
   return (
     <div>
-      <button onClick={onBack}>← Voltar</button>
-      <h3>{client.name}</h3>
-      <button onClick={() => setShowForm((v) => !v)}>{showForm ? 'Cancelar' : 'Nova sessão'}</button>
+      <div className="no-print">
+        <button onClick={onBack}>← Voltar</button>
+        <h3>{client.name}</h3>
+        <button onClick={() => setShowForm((v) => !v)}>{showForm ? 'Cancelar' : 'Nova sessão'}</button>
+        <button onClick={() => window.print()}>Imprimir prontuário</button>
+      </div>
       {error && <p className="error">{error}</p>}
 
       {showForm && (
@@ -178,19 +181,34 @@ function ClientProntuario({ client, hasPassword, onPasswordCreated, onBack }) {
         </form>
       )}
 
-      <div className="record-list">
-        {records.length === 0 && <p>Nenhum registro de sessão ainda.</p>}
-        {records.map((r) => (
-          <div key={r.id} className="record-card">
-            <strong>{formatBR(r.date)}</strong>
-            {r.complaint && <p>Queixa: {r.complaint}</p>}
-            {r.interventions && <p>Intervenções: {r.interventions}</p>}
-            {r.observations && <p>Observações: {r.observations}</p>}
-            {r.plan && <p>Plano: {r.plan}</p>}
-            {r.freeNotes && <p>Notas: {r.freeNotes}</p>}
-            <button onClick={() => handleDelete(r.id)}>Excluir</button>
-          </div>
-        ))}
+      <div id="printable-certificate">
+        <div className="print-only certificate-logo-area">
+          {profile?.settings?.certificateLogoUrl && <img src={profile.settings.certificateLogoUrl} alt="Logo" />}
+        </div>
+        <div className="print-only certificate-issuer">
+          {profile?.name}
+          {profile?.role ? ` · ${profile.role}` : ''}
+        </div>
+        <h3 className="print-only" style={{ textAlign: 'center', marginBottom: 20 }}>
+          Prontuário — {client.name}
+        </h3>
+
+        <div className="record-list">
+          {records.length === 0 && <p>Nenhum registro de sessão ainda.</p>}
+          {records.map((r) => (
+            <div key={r.id} className="record-card">
+              <strong>{formatBR(r.date)}</strong>
+              {r.complaint && <p>Queixa: {r.complaint}</p>}
+              {r.interventions && <p>Intervenções: {r.interventions}</p>}
+              {r.observations && <p>Observações: {r.observations}</p>}
+              {r.plan && <p>Plano: {r.plan}</p>}
+              {r.freeNotes && <p>Notas: {r.freeNotes}</p>}
+              <button className="no-print" onClick={() => handleDelete(r.id)}>
+                Excluir
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -222,6 +240,7 @@ export default function ProntuariosPage() {
         hasPassword={profile.settings.hasProntuarioPassword}
         onPasswordCreated={refreshProfile}
         onBack={() => setSelectedClient(null)}
+        profile={profile}
       />
     );
   }
