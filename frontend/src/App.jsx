@@ -4,6 +4,7 @@ import AgendaPage from './pages/AgendaPage'
 import AppShell from './pages/AppShell'
 import AtestadosPage from './pages/AtestadosPage'
 import ClientesPage from './pages/ClientesPage'
+import ControleHorarioPage from './pages/ControleHorarioPage'
 import ConfiguracoesPage from './pages/ConfiguracoesPage'
 import FinanceiroPage from './pages/FinanceiroPage'
 import LoginPage from './pages/LoginPage'
@@ -25,6 +26,7 @@ function App() {
       >
         <Route index element={<ResumoPage />} />
         <Route path="agenda" element={<AgendaPage />} />
+        <Route path="controle-horario" element={<ControleHorarioPage />} />
         <Route path="clientes" element={<ClientesPage />} />
         <Route path="financeiro" element={<FinanceiroPage />} />
         <Route path="prontuarios" element={<ProntuariosPage />} />

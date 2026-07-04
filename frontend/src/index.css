@@ -814,6 +814,139 @@ textarea {
   border-radius: 4px;
 }
 
+/* ---------- Controle de horário (cronômetro) ---------- */
+.timer-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-soft);
+}
+
+.timer-empty h3 {
+  color: var(--ink);
+  margin-bottom: 8px;
+  font-size: 17px;
+}
+
+.timer-card {
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 36px 32px;
+  text-align: center;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.timer-card.warning {
+  border-color: var(--gold);
+  background: var(--gold-wash);
+}
+
+.timer-card.overtime {
+  border-color: var(--alert);
+  background: var(--alert-wash);
+  animation: timerPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(181, 101, 74, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(181, 101, 74, 0);
+  }
+}
+
+.timer-client-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.timer-client-meta {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 24px;
+}
+
+.timer-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 56px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.timer-card.warning .timer-display {
+  color: #8a6f1a;
+}
+
+.timer-card.overtime .timer-display {
+  color: var(--alert);
+}
+
+.timer-status-label {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 26px;
+  font-weight: 600;
+}
+
+.timer-card.warning .timer-status-label {
+  color: #8a6f1a;
+}
+
+.timer-card.overtime .timer-status-label {
+  color: var(--alert);
+}
+
+.timer-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.timer-idle-list {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timer-idle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.timer-idle-item:hover {
+  border-color: var(--navy-light);
+}
+
+.timer-permission-banner {
+  max-width: 480px;
+  margin: 0 auto 20px;
+}
+
+/* ---------- Resumo diário ---------- */
+.resumo-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  width: 50px;
+  flex-shrink: 0;
+}
+
 @media (max-width: 720px) {
   .app {
     flex-direction: column;
