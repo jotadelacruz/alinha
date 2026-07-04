@@ -96,8 +96,9 @@ export default function AgendaPage() {
   }
 
   function apptClass(a) {
-    if (a.modality === 'Online') return 'online';
-    return a.status === 'pending' ? 'pending' : 'confirmed';
+    if (a.status !== 'pending') return 'confirmed';
+    const daysUntil = Math.round((new Date(a.dateIso) - TODAY) / 86400000);
+    return daysUntil <= 1 ? 'urgent' : 'pending';
   }
 
   const grouped = {};
@@ -250,7 +251,7 @@ export default function AgendaPage() {
                 {items.map((a) => {
                   const cl = clientById(a.clientId);
                   return (
-                    <div key={a.id} className="appt-row" onClick={() => setSelected(a)}>
+                    <div key={a.id} className={`appt-row ${apptClass(a)}`} onClick={() => setSelected(a)}>
                       <strong>{a.time}</strong> — {cl ? cl.name : 'Cliente removido'} ·{' '}
                       {a.status === 'pending' ? 'A confirmar' : 'Confirmada'} · {a.modality}
                       {a.recurrenceId ? ' · recorrente' : ''}

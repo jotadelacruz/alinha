@@ -683,9 +683,21 @@ textarea {
   border-left-color: var(--gold);
 }
 
-.appt-block.online {
-  background: var(--navy-wash);
-  border-left-color: var(--navy-light);
+.appt-block.urgent {
+  background: var(--alert-wash);
+  border-left-color: var(--alert);
+}
+
+.appt-row.confirmed {
+  border-left: 3px solid var(--sage);
+}
+
+.appt-row.pending {
+  border-left: 3px solid var(--gold);
+}
+
+.appt-row.urgent {
+  border-left: 3px solid var(--alert);
 }
 
 .agenda-list h4 {
