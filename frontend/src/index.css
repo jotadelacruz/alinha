@@ -746,6 +746,95 @@ textarea {
 }
 
 /* ---------- Financeiro ---------- */
+.fin-summary {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 18px;
+  margin-bottom: 22px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .fin-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card h3 {
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  height: 160px;
+  padding: 0 4px;
+}
+
+.bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 8px;
+}
+
+.bar {
+  width: 100%;
+  max-width: 36px;
+  background: var(--navy-light);
+  border-radius: 6px 6px 0 0;
+  transition: height 0.2s ease;
+}
+
+.bar.filled {
+  background: var(--navy);
+}
+
+.bar-label {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.open-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.open-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.open-item .name {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.open-item .since {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.open-item .amt {
+  font-weight: 700;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
 .tabs {
   display: flex;
   gap: 6px;
