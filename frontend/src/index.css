@@ -460,6 +460,11 @@ textarea {
   outline: none;
   transition: border-color 0.15s;
   background: var(--paper);
+  color: var(--ink);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 input:focus,

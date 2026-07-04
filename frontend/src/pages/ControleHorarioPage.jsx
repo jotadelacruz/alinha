@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
+import { useProfile } from '../context/ProfileContext';
 import { isoDate } from '../lib/dateUtils';
 
 const TODAY_ISO = isoDate(new Date());
@@ -13,9 +14,9 @@ function formatClock(totalSeconds) {
 }
 
 export default function ControleHorarioPage() {
+  const { profile } = useProfile();
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
-  const [sessionDuration, setSessionDuration] = useState(50);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null); // { clientId, time, startedAt }
@@ -24,18 +25,17 @@ export default function ControleHorarioPage() {
     typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
   );
   const notifiedRef = useRef(false);
+  const sessionDuration = profile?.settings?.agenda?.sessionDuration || 50;
 
   useEffect(() => {
     async function load() {
       try {
-        const [clientList, apptList, profile] = await Promise.all([
+        const [clientList, apptList] = await Promise.all([
           api.get('/clients'),
           api.get('/appointments', { from_iso: TODAY_ISO, to_iso: TODAY_ISO }),
-          api.get('/profile'),
         ]);
         setClients(clientList);
         setAppointments([...apptList].sort((a, b) => a.time.localeCompare(b.time)));
-        setSessionDuration(profile.settings.agenda.sessionDuration || 50);
       } catch (e) {
         setError(e.message);
       } finally {

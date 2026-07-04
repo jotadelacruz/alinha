@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { api } from '../lib/api';
-import { applyTheme } from '../lib/theme';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../context/ProfileContext';
 
 const NAV_ITEMS = [
   {
@@ -92,17 +90,7 @@ const NAV_ITEMS = [
 
 export default function AppShell() {
   const { signOut } = useAuth();
-  const [profile, setProfile] = useState(null);
-
-  useEffect(() => {
-    api
-      .get('/profile')
-      .then((p) => {
-        setProfile(p);
-        applyTheme(p.settings.theme);
-      })
-      .catch(() => {});
-  }, []);
+  const { profile } = useProfile();
 
   return (
     <div className="app">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { useProfile } from '../context/ProfileContext';
 import { formatBR, isoDate } from '../lib/dateUtils';
 
 const DEFAULT_CONTENT =
@@ -105,9 +106,9 @@ function CertificateEditor({ certificate, clients, profile, onBack, onSaved }) {
 }
 
 export default function AtestadosPage() {
+  const { profile } = useProfile();
   const [certificates, setCertificates] = useState([]);
   const [clients, setClients] = useState([]);
-  const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(undefined); // undefined = list view, null = new, object = edit
   const [error, setError] = useState('');
 
@@ -117,14 +118,9 @@ export default function AtestadosPage() {
 
   async function reload() {
     try {
-      const [certList, clientList, profileData] = await Promise.all([
-        api.get('/certificates'),
-        api.get('/clients'),
-        api.get('/profile'),
-      ]);
+      const [certList, clientList] = await Promise.all([api.get('/certificates'), api.get('/clients')]);
       setCertificates(certList);
       setClients(clientList);
-      setProfile(profileData);
     } catch (e) {
       setError(e.message);
     }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { colorFor, initials } from '../lib/avatar';
+import { useProfile } from '../context/ProfileContext';
 import { formatBR, isoDate } from '../lib/dateUtils';
 
 const EMPTY_RECORD_FORM = {
@@ -197,10 +198,10 @@ function ClientProntuario({ client, hasPassword, onPasswordCreated, onBack }) {
 
 export default function ProntuariosPage() {
   const [clients, setClients] = useState([]);
-  const [profile, setProfile] = useState(null);
   const [search, setSearch] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
   const [error, setError] = useState('');
+  const { profile, refreshProfile } = useProfile();
 
   useEffect(() => {
     reload();
@@ -208,9 +209,7 @@ export default function ProntuariosPage() {
 
   async function reload() {
     try {
-      const [clientList, profileData] = await Promise.all([api.get('/clients'), api.get('/profile')]);
-      setClients(clientList);
-      setProfile(profileData);
+      setClients(await api.get('/clients'));
     } catch (e) {
       setError(e.message);
     }
@@ -221,7 +220,7 @@ export default function ProntuariosPage() {
       <ClientProntuario
         client={selectedClient}
         hasPassword={profile.settings.hasProntuarioPassword}
-        onPasswordCreated={() => setProfile({ ...profile, settings: { ...profile.settings, hasProntuarioPassword: true } })}
+        onPasswordCreated={refreshProfile}
         onBack={() => setSelectedClient(null)}
       />
     );

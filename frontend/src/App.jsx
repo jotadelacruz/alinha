@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { RequireAuth } from './components/RequireAuth'
+import { ProfileProvider } from './context/ProfileContext'
 import AgendaPage from './pages/AgendaPage'
 import AppShell from './pages/AppShell'
 import AtestadosPage from './pages/AtestadosPage'
@@ -20,7 +21,9 @@ function App() {
         path="/app"
         element={
           <RequireAuth>
-            <AppShell />
+            <ProfileProvider>
+              <AppShell />
+            </ProfileProvider>
           </RequireAuth>
         }
       >
