@@ -17,7 +17,12 @@ from app.schemas.schemas import (
     PaymentTransactionOut,
     PaymentUpsert,
 )
-from app.services.finance_service import apply_payment_surplus_as_credit, compute_client_finance, compute_finance_summary
+from app.services.finance_service import (
+    apply_payment_surplus_as_credit,
+    compute_all_clients_finance,
+    compute_client_finance,
+    compute_finance_summary,
+)
 
 router = APIRouter(tags=["payments"])
 
@@ -181,6 +186,13 @@ def client_finance(
     db: Session = Depends(get_db),
 ):
     return compute_client_finance(db, user_id, client_id, month_iso)
+
+
+@router.get("/finance/clients", response_model=list[ClientFinanceOut], response_model_by_alias=True)
+def all_clients_finance(
+    month_iso: datetime.date = Query(...), user_id: uuid.UUID = Depends(get_current_user_id), db: Session = Depends(get_db)
+):
+    return list(compute_all_clients_finance(db, user_id, month_iso).values())
 
 
 @router.get("/finance/summary", response_model=FinanceSummaryOut, response_model_by_alias=True)

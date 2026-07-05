@@ -115,6 +115,11 @@ def test_finance_calculation_with_credit_surplus():
     credits = {c["clientId"]: c["balance"] for c in client.get("/client-credits").json()}
     assert credits.get(client_id) == 100
 
+    batch = {f["clientId"]: f for f in client.get("/finance/clients", params={"month_iso": month_iso}).json()}
+    assert batch[client_id]["due"] == fin["due"]
+    assert batch[client_id]["status"] == fin["status"]
+    assert batch[client_id]["balance"] == fin["balance"]
+
 
 def test_finance_summary_returns_camel_case():
     resp = client.get("/finance/summary", params={"month_iso": datetime.date.today().replace(day=1).isoformat()})

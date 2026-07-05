@@ -62,38 +62,26 @@ export default function FinanceiroPage() {
 
   async function loadAll() {
     try {
-      const [clientList, summaryData, billList, txList] = await Promise.all([
-        api.get('/clients'),
-        api.get('/finance/summary', { month_iso: CURRENT_MONTH_ISO }),
-        api.get('/bills'),
-        api.get('/payment-transactions', { reference_month_iso: CURRENT_MONTH_ISO }),
-      ]);
-      setClients(clientList);
-      setSummary(summaryData);
-      setBills(billList);
-      setTransactions(txList);
-
-      const finPairs = await Promise.all(
-        clientList.map((c) =>
-          api
-            .get(`/finance/client/${c.id}`, { month_iso: CURRENT_MONTH_ISO })
-            .then((fin) => [c.id, fin])
-        )
-      );
-      setFinances(Object.fromEntries(finPairs));
-
       const months = Array.from({ length: 6 }, (_, i) => {
         const d = new Date(TODAY.getFullYear(), TODAY.getMonth() - (5 - i), 1);
         return { iso: isoDate(d), label: MONTH_LABELS_SHORT[d.getMonth()] };
       });
-      const history = await Promise.all(
-        months.map(async (m) => {
-          const txs = await api.get('/payment-transactions', { reference_month_iso: m.iso });
-          const total = txs.reduce((sum, t) => sum + t.amount, 0);
-          return { ...m, total };
-        })
-      );
-      setMonthlyHistory(history);
+
+      const [clientList, summaryData, billList, txList, finList, historyTxs] = await Promise.all([
+        api.get('/clients'),
+        api.get('/finance/summary', { month_iso: CURRENT_MONTH_ISO }),
+        api.get('/bills'),
+        api.get('/payment-transactions', { reference_month_iso: CURRENT_MONTH_ISO }),
+        api.get('/finance/clients', { month_iso: CURRENT_MONTH_ISO }),
+        Promise.all(months.map((m) => api.get('/payment-transactions', { reference_month_iso: m.iso }))),
+      ]);
+
+      setClients(clientList);
+      setSummary(summaryData);
+      setBills(billList);
+      setTransactions(txList);
+      setFinances(Object.fromEntries(finList.map((f) => [f.clientId, f])));
+      setMonthlyHistory(months.map((m, i) => ({ ...m, total: historyTxs[i].reduce((sum, t) => sum + t.amount, 0) })));
     } catch (e) {
       setError(e.message);
     }
