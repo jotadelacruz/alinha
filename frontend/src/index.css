@@ -1224,20 +1224,6 @@ textarea {
   }
 }
 
-.settings-nav-item.danger {
-  color: var(--alert);
-}
-
-.settings-nav-item.danger:hover {
-  background: var(--alert-wash);
-  color: var(--alert);
-}
-
-.settings-nav-item.danger.active {
-  background: var(--alert-wash);
-  color: var(--alert);
-}
-
 .danger-pill-btn {
   display: inline-flex;
   align-items: center;

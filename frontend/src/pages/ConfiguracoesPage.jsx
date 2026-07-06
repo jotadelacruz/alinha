@@ -21,7 +21,7 @@ const TABS = [
   { key: 'preferencias', label: 'Preferências' },
   { key: 'mensagens', label: 'Modelos de mensagem' },
   { key: 'lgpd', label: 'LGPD e Termos' },
-  { key: 'dados', label: 'Dados', danger: true },
+  { key: 'dados', label: 'Dados' },
 ];
 
 const MESSAGE_EXAMPLES = {
@@ -309,7 +309,7 @@ export default function ConfiguracoesPage() {
             <button
               key={t.key}
               type="button"
-              className={`settings-nav-item ${tab === t.key ? 'active' : ''} ${t.danger ? 'danger' : ''}`}
+              className={`settings-nav-item ${tab === t.key ? 'active' : ''}`}
               onClick={() => setTab(t.key)}
             >
               {t.label}
