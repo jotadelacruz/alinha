@@ -729,6 +729,24 @@ textarea {
   max-width: 380px;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 25, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 100px;
+  z-index: 200;
+}
+
+.modal-card {
+  margin-top: 0;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
 .appt-detail h4 {
   font-size: 16px;
   margin-bottom: 6px;
