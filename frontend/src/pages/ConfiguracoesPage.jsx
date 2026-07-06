@@ -20,9 +20,8 @@ const TABS = [
   { key: 'consultorio', label: 'Consultório' },
   { key: 'preferencias', label: 'Preferências' },
   { key: 'mensagens', label: 'Modelos de mensagem' },
-  { key: 'seguranca', label: 'Segurança' },
-  { key: 'dados', label: 'Dados' },
   { key: 'lgpd', label: 'LGPD e Termos' },
+  { key: 'dados', label: 'Dados', danger: true },
 ];
 
 const MESSAGE_EXAMPLES = {
@@ -310,7 +309,7 @@ export default function ConfiguracoesPage() {
             <button
               key={t.key}
               type="button"
-              className={`settings-nav-item ${tab === t.key ? 'active' : ''}`}
+              className={`settings-nav-item ${tab === t.key ? 'active' : ''} ${t.danger ? 'danger' : ''}`}
               onClick={() => setTab(t.key)}
             >
               {t.label}
@@ -554,7 +553,6 @@ export default function ConfiguracoesPage() {
                     onChange={(e) => setForm({ ...form, messageTemplateCharge: e.target.value })}
                   />
                 </label>
-                <p className="settings-message-example">Exemplo: {MESSAGE_EXAMPLES.charge}</p>
 
                 <label>
                   Mensagem de confirmação
@@ -564,7 +562,6 @@ export default function ConfiguracoesPage() {
                     onChange={(e) => setForm({ ...form, messageTemplateConfirmation: e.target.value })}
                   />
                 </label>
-                <p className="settings-message-example">Exemplo: {MESSAGE_EXAMPLES.confirmation}</p>
 
                 <label>
                   Mensagem de pacote
@@ -574,16 +571,37 @@ export default function ConfiguracoesPage() {
                     onChange={(e) => setForm({ ...form, messageTemplatePackage: e.target.value })}
                   />
                 </label>
-                <p className="settings-message-example">Exemplo: {MESSAGE_EXAMPLES.package}</p>
               </section>
             )}
 
-            {tab !== 'seguranca' && tab !== 'dados' && tab !== 'lgpd' && <button type="submit">Salvar configurações</button>}
+            {tab !== 'dados' && tab !== 'lgpd' && <button type="submit">Salvar configurações</button>}
           </form>
 
-          {tab === 'seguranca' && (
+          {tab === 'lgpd' && (
             <section>
-              <h3>Segurança</h3>
+              <h3>LGPD e Termos</h3>
+              <div className="legal-doc-links">
+                <a href="/termos.html" target="_blank" rel="noopener noreferrer" className="legal-doc-link">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                  </svg>
+                  Termos de Uso
+                </a>
+                <a href="/privacidade.html" target="_blank" rel="noopener noreferrer" className="legal-doc-link">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <rect x="3" y="11" width="18" height="10" rx="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                  Política de Privacidade
+                </a>
+              </div>
+            </section>
+          )}
+
+          {tab === 'dados' && (
+            <section>
+              <h3>Dados</h3>
 
               <div>
                 <h4 style={{ fontSize: 13.5, marginBottom: 10 }}>Senha da conta</h4>
@@ -598,33 +616,13 @@ export default function ConfiguracoesPage() {
                 </p>
                 <PasswordSection hasPassword={profile?.settings.hasProntuarioPassword} />
               </div>
-            </section>
-          )}
 
-          {tab === 'dados' && (
-            <section className="danger-zone">
-              <h3>Zona de risco</h3>
-              <button onClick={handleDeleteAllData}>Apagar todos os meus dados</button>
-            </section>
-          )}
-
-          {tab === 'lgpd' && (
-            <section>
-              <h3>LGPD e Termos</h3>
-              <p style={{ fontSize: 13.5, lineHeight: 1.6, marginBottom: 12 }}>
-                O Alinha trata dados pessoais e dados sensíveis de saúde (prontuários) de acordo com a Lei Geral de
-                Proteção de Dados (Lei nº 13.709/2018). Os prontuários são protegidos por senha e todo acesso a eles
-                é registrado para fins de auditoria.
-              </p>
-              <p style={{ fontSize: 13.5, lineHeight: 1.6, marginBottom: 12 }}>
-                Você é a controladora dos dados dos seus clientes cadastrados no sistema, sendo responsável por
-                obter o consentimento adequado deles quando aplicável. Os dados ficam armazenados de forma
-                criptografada em repouso e em trânsito.
-              </p>
-              <p style={{ fontSize: 13.5, lineHeight: 1.6 }}>
-                Você pode exportar ou apagar todos os seus dados a qualquer momento pela aba "Dados". Em caso de
-                dúvidas sobre tratamento de dados, entre em contato com o suporte.
-              </p>
+              <div style={{ borderTop: '1px solid var(--line)', paddingTop: 16, marginTop: 4 }}>
+                <h4 style={{ fontSize: 13.5, marginBottom: 10, color: 'var(--alert)' }}>Zona de risco</h4>
+                <button className="danger-pill-btn" onClick={handleDeleteAllData}>
+                  Apagar todos os meus dados
+                </button>
+              </div>
             </section>
           )}
         </div>
