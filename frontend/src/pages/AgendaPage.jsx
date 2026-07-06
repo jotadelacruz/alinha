@@ -127,6 +127,42 @@ export default function AgendaPage() {
 
       {error && <p className="error">{error}</p>}
 
+      {selected && (
+        <div className="appt-detail">
+          <h4>{clientById(selected.clientId)?.name}</h4>
+          <p>
+            {formatBR(selected.dateIso)} às {selected.time}
+          </p>
+          <div>
+            <button onClick={() => handleStatusChange(selected, 'confirmed')}>Marcar confirmada</button>
+            <button onClick={() => handleStatusChange(selected, 'pending')}>Marcar a confirmar</button>
+          </div>
+          {selected.dateIso === TODAY_ISO && (
+            <button onClick={() => handleStartSession(selected)}>Iniciar consulta</button>
+          )}
+          {clientById(selected.clientId)?.phone ? (
+            <a
+              className="whatsapp-confirm-btn"
+              href={whatsappLink(
+                clientById(selected.clientId).phone,
+                confirmationMessage(clientById(selected.clientId).name, selected.dateIso, selected.time)
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Confirmar por WhatsApp
+            </a>
+          ) : (
+            <p className="whatsapp-no-phone">Cadastre o telefone do cliente para confirmar por WhatsApp.</p>
+          )}
+          <button onClick={() => handleDelete(selected)}>Cancelar esta consulta</button>
+          {selected.recurrenceId && (
+            <button onClick={() => handleDeleteSeries(selected)}>Cancelar série recorrente futura</button>
+          )}
+          <button onClick={() => setSelected(null)}>Fechar</button>
+        </div>
+      )}
+
       <div className="week-nav">
         <button onClick={() => setWeekOffset((v) => v - 1)}>← Semana anterior</button>
         <button onClick={() => setWeekOffset(0)}>Hoje</button>
@@ -272,42 +308,6 @@ export default function AgendaPage() {
             );
           })}
           {Object.keys(grouped).length === 0 && <p>Nenhuma consulta agendada nesta semana.</p>}
-        </div>
-      )}
-
-      {selected && (
-        <div className="appt-detail">
-          <h4>{clientById(selected.clientId)?.name}</h4>
-          <p>
-            {formatBR(selected.dateIso)} às {selected.time}
-          </p>
-          <div>
-            <button onClick={() => handleStatusChange(selected, 'confirmed')}>Marcar confirmada</button>
-            <button onClick={() => handleStatusChange(selected, 'pending')}>Marcar a confirmar</button>
-          </div>
-          {selected.dateIso === TODAY_ISO && (
-            <button onClick={() => handleStartSession(selected)}>Iniciar consulta</button>
-          )}
-          {clientById(selected.clientId)?.phone ? (
-            <a
-              className="whatsapp-confirm-btn"
-              href={whatsappLink(
-                clientById(selected.clientId).phone,
-                confirmationMessage(clientById(selected.clientId).name, selected.dateIso, selected.time)
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Confirmar por WhatsApp
-            </a>
-          ) : (
-            <p className="whatsapp-no-phone">Cadastre o telefone do cliente para confirmar por WhatsApp.</p>
-          )}
-          <button onClick={() => handleDelete(selected)}>Cancelar esta consulta</button>
-          {selected.recurrenceId && (
-            <button onClick={() => handleDeleteSeries(selected)}>Cancelar série recorrente futura</button>
-          )}
-          <button onClick={() => setSelected(null)}>Fechar</button>
         </div>
       )}
     </div>

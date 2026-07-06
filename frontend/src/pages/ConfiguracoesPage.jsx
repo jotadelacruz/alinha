@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { ALL_WEEK_DAYS } from '../lib/dateUtils';
 import { applyTheme } from '../lib/theme';
@@ -43,6 +44,81 @@ function readImageAsDataUrl(file) {
     reader.onerror = () => reject(new Error('Erro ao ler o arquivo'));
     reader.readAsDataURL(file);
   });
+}
+
+function AccountPasswordSection() {
+  const { user, signInWithEmail, updatePassword } = useAuth();
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    setSuccess(false);
+    if (newPassword.length < 6) {
+      setError('Use ao menos 6 caracteres na nova senha.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('As senhas não coincidem.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error: authError } = await signInWithEmail(user.email, currentPassword);
+      if (authError) {
+        setError('Senha atual incorreta.');
+        setLoading(false);
+        return;
+      }
+      const { error: updateError } = await updatePassword(newPassword);
+      if (updateError) throw updateError;
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="settings-password-form">
+      <input
+        type="password"
+        placeholder="Senha atual"
+        value={currentPassword}
+        onChange={(e) => setCurrentPassword(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Nova senha"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Confirme a nova senha"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        required
+      />
+      {error && <p className="error">{error}</p>}
+      {success && <p className="success">Senha atualizada</p>}
+      <button type="submit" disabled={loading}>
+        {loading ? 'Salvando...' : 'Trocar senha'}
+      </button>
+    </form>
+  );
 }
 
 function PasswordSection({ hasPassword }) {
@@ -477,11 +553,20 @@ export default function ConfiguracoesPage() {
           {tab === 'seguranca' && (
             <section>
               <h3>Segurança</h3>
-              <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 14 }}>
-                Senha de acesso aos prontuários:{' '}
-                {profile?.settings.hasProntuarioPassword ? 'definida' : 'ainda não definida'}.
-              </p>
-              <PasswordSection hasPassword={profile?.settings.hasProntuarioPassword} />
+
+              <div>
+                <h4 style={{ fontSize: 13.5, marginBottom: 10 }}>Senha da conta</h4>
+                <AccountPasswordSection />
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--line)', paddingTop: 16, marginTop: 4 }}>
+                <h4 style={{ fontSize: 13.5, marginBottom: 6 }}>Senha dos prontuários</h4>
+                <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 14 }}>
+                  Senha de acesso aos prontuários:{' '}
+                  {profile?.settings.hasProntuarioPassword ? 'definida' : 'ainda não definida'}.
+                </p>
+                <PasswordSection hasPassword={profile?.settings.hasProntuarioPassword} />
+              </div>
             </section>
           )}
 

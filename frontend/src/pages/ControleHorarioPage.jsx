@@ -47,6 +47,7 @@ export default function ControleHorarioPage() {
 
   useEffect(() => {
     if (!session) return;
+    setNow(Date.now());
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, [session]);
