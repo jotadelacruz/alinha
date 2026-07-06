@@ -190,6 +190,20 @@ class Certificate(Base):
     updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class Receipt(Base):
+    __tablename__ = "receipts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    owner_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("profiles.id"))
+    client_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("clients.id"), nullable=True)
+    client_name_snapshot: Mapped[str | None] = mapped_column(Text, nullable=True)
+    issue_date: Mapped[object] = mapped_column(Date)
+    amount: Mapped[float | None] = mapped_column(Numeric, nullable=True)
+    content: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class ProntuarioAccessLog(Base):
     """LGPD: registro de auditoria de acesso a prontuário (não existe no schema legado)."""
 

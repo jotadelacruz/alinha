@@ -354,11 +354,11 @@ export default function ConfiguracoesPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', marginBottom: 8 }}>Logo do atestado</label>
+                  <label style={{ display: 'block', marginBottom: 8 }}>Logo de Emissões</label>
                   <div className="settings-photo-row">
                     <div className="certificate-logo-preview">
                       {form.certificateLogoUrl ? (
-                        <img src={form.certificateLogoUrl} alt="Logo do atestado" />
+                        <img src={form.certificateLogoUrl} alt="Logo de Emissões" />
                       ) : (
                         <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>Sem logo</span>
                       )}

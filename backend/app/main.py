@@ -5,7 +5,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
-from app.routers import appointments, bills, certificates, clients, data, packages, payments, profile, session_records
+from app.routers import (
+    appointments,
+    bills,
+    certificates,
+    clients,
+    data,
+    packages,
+    payments,
+    profile,
+    receipts,
+    session_records,
+)
 
 logger = logging.getLogger("alinha")
 
@@ -35,6 +46,7 @@ app.include_router(bills.router)
 app.include_router(session_records.router)
 app.include_router(packages.router)
 app.include_router(certificates.router)
+app.include_router(receipts.router)
 app.include_router(data.router)
 
 

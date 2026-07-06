@@ -288,3 +288,20 @@ class CertificateCreate(CertificateBase):
 
 class CertificateOut(CertificateBase):
     id: uuid.UUID
+
+
+# ---------- Receipts (recibos de pagamento) ----------
+class ReceiptBase(CamelModel):
+    client_id: uuid.UUID | None = None
+    client_name_snapshot: str | None = None
+    issue_date: datetime.date
+    amount: float | None = None
+    content: str
+
+
+class ReceiptCreate(ReceiptBase):
+    pass
+
+
+class ReceiptOut(ReceiptBase):
+    id: uuid.UUID

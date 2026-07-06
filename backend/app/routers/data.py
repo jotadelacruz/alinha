@@ -14,6 +14,7 @@ from app.models.models import (
     Package,
     Payment,
     PaymentTransaction,
+    Receipt,
     SessionRecord,
 )
 
@@ -24,6 +25,7 @@ router = APIRouter(prefix="/data", tags=["data"])
 _TABLES_IN_DELETE_ORDER = [
     SessionRecord,
     Certificate,
+    Receipt,
     Package,
     PaymentTransaction,
     ClientCredit,
