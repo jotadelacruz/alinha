@@ -34,6 +34,8 @@ def _to_profile_out(p: Profile) -> ProfileOut:
             },
             "office": {
                 "address": p.office_address or "",
+                "cep": p.office_cep or "",
+                "cnpj": p.cnpj or "",
                 "default_value": float(p.default_session_value or 210),
                 "pix": p.pix_key or "",
             },

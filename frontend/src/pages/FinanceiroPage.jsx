@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { useProfile } from '../context/ProfileContext';
 import { formatBR, isoDate } from '../lib/dateUtils';
+import { chargeMessage, whatsappLink } from '../lib/whatsapp';
 
 const TODAY = new Date();
 const CURRENT_MONTH_ISO = isoDate(new Date(TODAY.getFullYear(), TODAY.getMonth(), 1));
@@ -43,6 +45,7 @@ const EMPTY_PAYMENT_FORM = { amount: '', paymentDate: isoDate(TODAY), paymentMet
 const EMPTY_BILL_FORM = { name: '', category: 'Outros', amount: '', dueDate: isoDate(TODAY), isFixed: false };
 
 export default function FinanceiroPage() {
+  const { profile } = useProfile();
   const [tab, setTab] = useState('por-cliente');
   const [clients, setClients] = useState([]);
   const [finances, setFinances] = useState({});
@@ -186,6 +189,7 @@ export default function FinanceiroPage() {
               const heightPct = Math.max(4, Math.round((m.total / max) * 100));
               return (
                 <div key={i} className="bar-group">
+                  <div className="bar-value">{m.total > 0 ? fmtBRL(m.total).replace(',00', '') : ''}</div>
                   <div className={`bar ${i === monthlyHistory.length - 1 ? 'filled' : ''}`} style={{ height: `${heightPct}%` }} title={fmtBRL(m.total)} />
                   <div className="bar-label">{m.label}</div>
                 </div>
@@ -208,6 +212,24 @@ export default function FinanceiroPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div className="amt">{fmtBRL(fin.balance)}</div>
+                      {client?.phone && (
+                        <a
+                          className="whatsapp-confirm-btn"
+                          href={whatsappLink(
+                            client.phone,
+                            chargeMessage(profile?.settings?.messageTemplates?.charge, {
+                              clientName: client.name,
+                              amount: fin.balance,
+                              referenceMonthIso: CURRENT_MONTH_ISO,
+                              pixKey: profile?.settings?.office?.pix,
+                            })
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Cobrar
+                        </a>
+                      )}
                       <button onClick={() => setPayingClientId(fin.clientId)}>Registrar</button>
                     </div>
                   </div>

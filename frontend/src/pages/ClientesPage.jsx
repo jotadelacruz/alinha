@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
+import { useProfile } from '../context/ProfileContext';
+import { colorFor, initials } from '../lib/avatar';
 import { downloadImportTemplate, exportClientsCSV, parseCSV, parseClientRows } from '../lib/csv';
 import { formatBR } from '../lib/dateUtils';
 
@@ -119,6 +121,8 @@ function ClientDetail({ client, onBack, onSaved, onDeleted }) {
 }
 
 export default function ClientesPage() {
+  const { profile } = useProfile();
+  const defaultSessionDuration = profile?.settings?.agenda?.sessionDuration || 50;
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -151,21 +155,6 @@ export default function ClientesPage() {
       await api.post('/clients', { ...form, sessionDuration: form.sessionDuration === '' ? null : Number(form.sessionDuration) });
       setForm(EMPTY_FORM);
       setShowForm(false);
-      await reload();
-    } catch (e) {
-      setError(e.message);
-    }
-  }
-
-  async function handleDelete(id) {
-    if (!confirm('Excluir este cliente?')) return;
-    await api.delete(`/clients/${id}`);
-    await reload();
-  }
-
-  async function handleStatusChange(id, status) {
-    try {
-      await api.patch(`/clients/${id}/status`, { status });
       await reload();
     } catch (e) {
       setError(e.message);
@@ -359,37 +348,28 @@ export default function ClientesPage() {
         </form>
       )}
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Frequência</th>
-            <th>Valor</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {clients.map((c) => (
-            <tr key={c.id}>
-              <td onClick={() => setSelectedClient(c)} style={{ cursor: 'pointer' }}>
-                {c.name}
-              </td>
-              <td>{c.frequency}</td>
-              <td>R$ {c.value}</td>
-              <td>
-                <select value={c.status} onChange={(e) => handleStatusChange(c.id, e.target.value)}>
-                  <option value="ativo">Ativo</option>
-                  <option value="pausa">Em pausa</option>
-                </select>
-              </td>
-              <td>
-                <button onClick={() => handleDelete(c.id)}>Excluir</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="client-grid">
+        {clients.map((c) => (
+          <div key={c.id} className="client-card" onClick={() => setSelectedClient(c)}>
+            <div className="client-top">
+              <div className="client-avatar" style={{ background: colorFor(c.name) }}>
+                {initials(c.name)}
+              </div>
+              <div>
+                <div className="client-name">{c.name}</div>
+                <div className="client-since">
+                  R$ {c.value} · {c.sessionDuration || defaultSessionDuration} min
+                </div>
+              </div>
+            </div>
+            <div className="client-footer">
+              <span className={`client-status ${c.status}`}>{c.status === 'ativo' ? 'Ativo' : 'Em pausa'}</span>
+              <span className="next-session">Ver detalhes →</span>
+            </div>
+          </div>
+        ))}
+        {clients.length === 0 && <p>Nenhum cliente cadastrado ainda.</p>}
+      </div>
     </div>
   );
 }

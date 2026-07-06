@@ -3,14 +3,18 @@ import { api } from '../lib/api';
 import { useProfile } from '../context/ProfileContext';
 import { formatBR, isoDate } from '../lib/dateUtils';
 
-const DEFAULT_CONTENT =
-  'Atesto, para os devidos fins, que {cliente} esteve sob meus cuidados profissionais, necessitando de afastamento de suas atividades pelo período que se fizer necessário.';
+const DEFAULT_CONTENT_TEMPLATE =
+  'Atesto, para os devidos fins, que {cliente} esteve sob meus cuidados profissionais em {data}, necessitando de afastamento de suas atividades pelo período que se fizer necessário.';
+
+function buildDefaultContent(issueDate) {
+  return DEFAULT_CONTENT_TEMPLATE.replace('{data}', formatBR(issueDate));
+}
 
 function CertificateEditor({ certificate, clients, profile, onBack, onSaved }) {
   const isEdit = !!certificate;
   const [clientId, setClientId] = useState(certificate?.clientId || '');
   const [issueDate, setIssueDate] = useState(certificate?.issueDate || isoDate(new Date()));
-  const [content, setContent] = useState(certificate?.content || DEFAULT_CONTENT);
+  const [content, setContent] = useState(certificate?.content || buildDefaultContent(certificate?.issueDate || isoDate(new Date())));
   const [error, setError] = useState('');
 
   function handleClientChange(newClientId) {
@@ -20,6 +24,15 @@ function CertificateEditor({ certificate, clients, profile, onBack, onSaved }) {
       setContent(content.split(previousName).join(newName));
     }
     setClientId(newClientId);
+  }
+
+  function handleDateChange(newIssueDate) {
+    const previousFormatted = formatBR(issueDate);
+    const newFormatted = formatBR(newIssueDate);
+    if (content.includes(previousFormatted)) {
+      setContent(content.split(previousFormatted).join(newFormatted));
+    }
+    setIssueDate(newIssueDate);
   }
 
   async function handleSave() {
@@ -70,7 +83,7 @@ function CertificateEditor({ certificate, clients, profile, onBack, onSaved }) {
         </label>
         <label>
           Data de emissão
-          <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
+          <input type="date" value={issueDate} onChange={(e) => handleDateChange(e.target.value)} />
         </label>
       </div>
 

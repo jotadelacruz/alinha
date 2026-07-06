@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
-import { WEEK_DAYS } from '../lib/dateUtils';
+import { useProfile } from '../context/ProfileContext';
+import { ALL_WEEK_DAYS } from '../lib/dateUtils';
 import { applyTheme } from '../lib/theme';
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -11,10 +12,21 @@ const TABS = [
   { key: 'agenda', label: 'Agenda' },
   { key: 'notificacoes', label: 'Notificações' },
   { key: 'consultorio', label: 'Consultório' },
+  { key: 'preferencias', label: 'Preferências' },
   { key: 'mensagens', label: 'Modelos de mensagem' },
   { key: 'seguranca', label: 'Segurança' },
   { key: 'dados', label: 'Dados' },
+  { key: 'lgpd', label: 'LGPD e Termos' },
 ];
+
+const MESSAGE_EXAMPLES = {
+  charge:
+    'Olá {nome}! Passando para lembrar que o pagamento da sessão de {mês} ainda está em aberto ({valor}). Você pode enviar via PIX: {chave pix}. Qualquer dúvida, estou à disposição!',
+  confirmation:
+    'Olá {nome}! Passando para confirmar sua consulta no dia {data} às {horário}. Pode confirmar presença?',
+  package:
+    'Olá {nome}! Seu pacote de sessões está chegando ao fim — restam {sessões restantes} sessões. Vamos combinar a renovação?',
+};
 
 function readImageAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -33,8 +45,85 @@ function readImageAsDataUrl(file) {
   });
 }
 
+function PasswordSection({ hasPassword }) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    setSuccess(false);
+    if (newPassword.length < 4) {
+      setError('Use ao menos 4 caracteres na nova senha.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('As senhas não coincidem.');
+      return;
+    }
+    setLoading(true);
+    try {
+      if (hasPassword) {
+        const { valid } = await api.post('/profile/prontuario-password/verify', { password: currentPassword });
+        if (!valid) {
+          setError('Senha atual incorreta.');
+          setLoading(false);
+          return;
+        }
+      }
+      await api.post('/profile/prontuario-password', { password: newPassword });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="settings-password-form">
+      {hasPassword && (
+        <input
+          type="password"
+          placeholder="Senha atual"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          required
+        />
+      )}
+      <input
+        type="password"
+        placeholder={hasPassword ? 'Nova senha' : 'Criar senha'}
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Confirme a nova senha"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        required
+      />
+      {error && <p className="error">{error}</p>}
+      {success && <p className="success">Senha atualizada</p>}
+      <button type="submit" disabled={loading}>
+        {loading ? 'Salvando...' : hasPassword ? 'Trocar senha' : 'Criar senha'}
+      </button>
+    </form>
+  );
+}
+
 export default function ConfiguracoesPage() {
-  const [profile, setProfile] = useState(null);
+  const { profile, refreshProfile } = useProfile();
   const [form, setForm] = useState(null);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
@@ -43,36 +132,33 @@ export default function ConfiguracoesPage() {
   const logoInputRef = useRef(null);
 
   useEffect(() => {
-    api
-      .get('/profile')
-      .then((p) => {
-        setProfile(p);
-        setForm({
-          name: p.name,
-          role: p.role,
-          initials: p.initials,
-          photoDataUrl: p.photoDataUrl,
-          theme: p.settings.theme,
-          workStart: p.settings.agenda.workStart,
-          workEnd: p.settings.agenda.workEnd,
-          sessionDuration: p.settings.agenda.sessionDuration,
-          workDays: p.settings.agenda.workDays,
-          notifSession: p.settings.notifications.session,
-          notifPayment: p.settings.notifications.payment,
-          notifBills: p.settings.notifications.bills,
-          notifWeekly: p.settings.notifications.weekly,
-          officeAddress: p.settings.office.address,
-          defaultSessionValue: p.settings.office.defaultValue,
-          pixKey: p.settings.office.pix,
-          messageTemplateCharge: p.settings.messageTemplates.charge,
-          messageTemplateConfirmation: p.settings.messageTemplates.confirmation,
-          messageTemplatePackage: p.settings.messageTemplates.package,
-          packageAlertThreshold: p.settings.packageAlertThreshold,
-          certificateLogoUrl: p.settings.certificateLogoUrl,
-        });
-      })
-      .catch((e) => setError(e.message));
-  }, []);
+    if (!profile) return;
+    setForm({
+      name: profile.name,
+      role: profile.role,
+      initials: profile.initials,
+      photoDataUrl: profile.photoDataUrl,
+      theme: profile.settings.theme,
+      workStart: profile.settings.agenda.workStart,
+      workEnd: profile.settings.agenda.workEnd,
+      sessionDuration: profile.settings.agenda.sessionDuration,
+      workDays: profile.settings.agenda.workDays,
+      notifSession: profile.settings.notifications.session,
+      notifPayment: profile.settings.notifications.payment,
+      notifBills: profile.settings.notifications.bills,
+      notifWeekly: profile.settings.notifications.weekly,
+      officeAddress: profile.settings.office.address,
+      officeCep: profile.settings.office.cep,
+      cnpj: profile.settings.office.cnpj,
+      defaultSessionValue: profile.settings.office.defaultValue,
+      pixKey: profile.settings.office.pix,
+      messageTemplateCharge: profile.settings.messageTemplates.charge,
+      messageTemplateConfirmation: profile.settings.messageTemplates.confirmation,
+      messageTemplatePackage: profile.settings.messageTemplates.package,
+      packageAlertThreshold: profile.settings.packageAlertThreshold,
+      certificateLogoUrl: profile.settings.certificateLogoUrl,
+    });
+  }, [profile]);
 
   function toggleWorkDay(day) {
     setForm((f) => ({
@@ -110,6 +196,7 @@ export default function ConfiguracoesPage() {
     setError('');
     try {
       await api.patch('/profile', form);
+      await refreshProfile();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
@@ -249,13 +336,22 @@ export default function ConfiguracoesPage() {
                   Esse valor também define quando a tela de Controle de horário mostra o aviso dos últimos 5 minutos.
                 </p>
                 <div>
-                  Dias de atendimento:
-                  {WEEK_DAYS.map((day) => (
-                    <label key={day}>
-                      <input type="checkbox" checked={form.workDays.includes(day)} onChange={() => toggleWorkDay(day)} />
-                      {day}
-                    </label>
-                  ))}
+                  <label style={{ display: 'block', marginBottom: 8 }}>Dias de atendimento</label>
+                  <div className="workdays-grid">
+                    {ALL_WEEK_DAYS.map((day) => {
+                      const checked = form.workDays.includes(day);
+                      return (
+                        <button
+                          key={day}
+                          type="button"
+                          className={`workday-chip ${checked ? 'active' : ''}`}
+                          onClick={() => toggleWorkDay(day)}
+                        >
+                          {day.slice(0, 3)}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </section>
             )}
@@ -307,12 +403,28 @@ export default function ConfiguracoesPage() {
                   placeholder="Endereço"
                 />
                 <input
+                  value={form.officeCep}
+                  onChange={(e) => setForm({ ...form, officeCep: e.target.value })}
+                  placeholder="CEP"
+                />
+                <input
+                  value={form.cnpj}
+                  onChange={(e) => setForm({ ...form, cnpj: e.target.value })}
+                  placeholder="CNPJ"
+                />
+                <input
                   type="number"
                   value={form.defaultSessionValue}
                   onChange={(e) => setForm({ ...form, defaultSessionValue: Number(e.target.value) })}
-                  placeholder="Valor padrão da sessão"
+                  placeholder="Valor padrão das consultas"
                 />
                 <input value={form.pixKey} onChange={(e) => setForm({ ...form, pixKey: e.target.value })} placeholder="Chave PIX" />
+              </section>
+            )}
+
+            {tab === 'preferencias' && (
+              <section>
+                <h3>Preferências</h3>
                 <label>
                   Alertar quando faltarem X sessões no pacote
                   <input
@@ -327,35 +439,49 @@ export default function ConfiguracoesPage() {
             {tab === 'mensagens' && (
               <section>
                 <h3>Modelos de mensagem</h3>
-                <textarea
-                  placeholder="Mensagem de cobrança"
-                  value={form.messageTemplateCharge}
-                  onChange={(e) => setForm({ ...form, messageTemplateCharge: e.target.value })}
-                />
-                <textarea
-                  placeholder="Mensagem de confirmação"
-                  value={form.messageTemplateConfirmation}
-                  onChange={(e) => setForm({ ...form, messageTemplateConfirmation: e.target.value })}
-                />
-                <textarea
-                  placeholder="Mensagem de pacote"
-                  value={form.messageTemplatePackage}
-                  onChange={(e) => setForm({ ...form, messageTemplatePackage: e.target.value })}
-                />
+                <label>
+                  Mensagem de cobrança
+                  <textarea
+                    placeholder={MESSAGE_EXAMPLES.charge}
+                    value={form.messageTemplateCharge}
+                    onChange={(e) => setForm({ ...form, messageTemplateCharge: e.target.value })}
+                  />
+                </label>
+                <p className="settings-message-example">Exemplo: {MESSAGE_EXAMPLES.charge}</p>
+
+                <label>
+                  Mensagem de confirmação
+                  <textarea
+                    placeholder={MESSAGE_EXAMPLES.confirmation}
+                    value={form.messageTemplateConfirmation}
+                    onChange={(e) => setForm({ ...form, messageTemplateConfirmation: e.target.value })}
+                  />
+                </label>
+                <p className="settings-message-example">Exemplo: {MESSAGE_EXAMPLES.confirmation}</p>
+
+                <label>
+                  Mensagem de pacote
+                  <textarea
+                    placeholder={MESSAGE_EXAMPLES.package}
+                    value={form.messageTemplatePackage}
+                    onChange={(e) => setForm({ ...form, messageTemplatePackage: e.target.value })}
+                  />
+                </label>
+                <p className="settings-message-example">Exemplo: {MESSAGE_EXAMPLES.package}</p>
               </section>
             )}
 
-            {tab !== 'seguranca' && tab !== 'dados' && <button type="submit">Salvar configurações</button>}
+            {tab !== 'seguranca' && tab !== 'dados' && tab !== 'lgpd' && <button type="submit">Salvar configurações</button>}
           </form>
 
           {tab === 'seguranca' && (
             <section>
               <h3>Segurança</h3>
-              <p>
+              <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 14 }}>
                 Senha de acesso aos prontuários:{' '}
-                {profile?.settings.hasProntuarioPassword ? 'definida' : 'ainda não definida'}. Para criar ou trocar, acesse
-                a tela de Prontuários.
+                {profile?.settings.hasProntuarioPassword ? 'definida' : 'ainda não definida'}.
               </p>
+              <PasswordSection hasPassword={profile?.settings.hasProntuarioPassword} />
             </section>
           )}
 
@@ -363,6 +489,26 @@ export default function ConfiguracoesPage() {
             <section className="danger-zone">
               <h3>Zona de risco</h3>
               <button onClick={handleDeleteAllData}>Apagar todos os meus dados</button>
+            </section>
+          )}
+
+          {tab === 'lgpd' && (
+            <section>
+              <h3>LGPD e Termos</h3>
+              <p style={{ fontSize: 13.5, lineHeight: 1.6, marginBottom: 12 }}>
+                O Alinha trata dados pessoais e dados sensíveis de saúde (prontuários) de acordo com a Lei Geral de
+                Proteção de Dados (Lei nº 13.709/2018). Os prontuários são protegidos por senha e todo acesso a eles
+                é registrado para fins de auditoria.
+              </p>
+              <p style={{ fontSize: 13.5, lineHeight: 1.6, marginBottom: 12 }}>
+                Você é a controladora dos dados dos seus clientes cadastrados no sistema, sendo responsável por
+                obter o consentimento adequado deles quando aplicável. Os dados ficam armazenados de forma
+                criptografada em repouso e em trânsito.
+              </p>
+              <p style={{ fontSize: 13.5, lineHeight: 1.6 }}>
+                Você pode exportar ou apagar todos os seus dados a qualquer momento pela aba "Dados". Em caso de
+                dúvidas sobre tratamento de dados, entre em contato com o suporte.
+              </p>
             </section>
           )}
         </div>

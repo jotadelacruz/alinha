@@ -781,17 +781,21 @@ textarea {
   }
 }
 
+.chart-card {
+  padding: 24px 26px;
+}
+
 .chart-card h3 {
   font-size: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .bars {
   display: flex;
   align-items: flex-end;
-  gap: 14px;
-  height: 160px;
-  padding: 0 4px;
+  gap: 16px;
+  height: 180px;
+  padding: 0 8px;
 }
 
 .bar-group {
@@ -804,9 +808,17 @@ textarea {
   gap: 8px;
 }
 
+.bar-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
 .bar {
   width: 100%;
-  max-width: 36px;
+  max-width: 32px;
+  min-height: 3px;
   background: var(--navy-light);
   border-radius: 6px 6px 0 0;
   transition: height 0.2s ease;
@@ -820,6 +832,7 @@ textarea {
   font-size: 12px;
   color: var(--ink-soft);
   font-weight: 600;
+  margin-top: 10px;
 }
 
 .open-list {
@@ -956,22 +969,31 @@ textarea {
 }
 
 /* ---------- Configurações ---------- */
-.settings-form section {
+.settings-content section {
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 20px 24px;
+  padding: 24px 28px;
   margin-bottom: 16px;
-  max-width: 560px;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
-.settings-form section h3 {
-  font-size: 15px;
+.settings-content section h3 {
+  font-size: 16px;
   margin-bottom: 4px;
+}
+
+.settings-content section > input,
+.settings-content section > select,
+.settings-content section label > input[type='text'],
+.settings-content section label > input[type='number'],
+.settings-content section label > input[type='time'] {
+  width: 100%;
+  max-width: 420px;
 }
 
 .settings-form section label {
@@ -985,6 +1007,48 @@ textarea {
 
 .settings-form button[type='submit'] {
   align-self: flex-start;
+}
+
+.settings-message-example {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-top: -6px;
+  margin-bottom: 4px;
+}
+
+.settings-password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.settings-password-form input {
+  width: 100%;
+}
+
+.workdays-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workday-chip {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workday-chip.active {
+  background: var(--navy-wash);
+  border-color: var(--navy);
+  color: var(--navy);
 }
 
 .settings-layout {
@@ -1097,7 +1161,7 @@ textarea {
 .danger-zone {
   border: 1px solid var(--alert) !important;
   background: var(--alert-wash) !important;
-  max-width: 560px;
+  width: 100%;
   border-radius: var(--radius);
   padding: 20px 24px;
   margin-top: 20px;

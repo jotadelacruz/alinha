@@ -113,8 +113,16 @@ export default function AppShell() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="brand-mark" style={{ background: 'var(--sage)' }}>
-            {profile?.initials || '..'}
+          <div className="brand-mark" style={{ background: 'var(--sage)', overflow: 'hidden', padding: 0 }}>
+            {profile?.photoDataUrl ? (
+              <img
+                src={profile.photoDataUrl}
+                alt="Foto de perfil"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              profile?.initials || '..'
+            )}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: 13.5 }}>{profile?.name || 'Carregando...'}</div>
