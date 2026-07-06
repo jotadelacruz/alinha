@@ -1,5 +1,4 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 
 const NAV_ITEMS = [
@@ -89,7 +88,6 @@ const NAV_ITEMS = [
 ];
 
 export default function AppShell() {
-  const { signOut } = useAuth();
   const { profile } = useProfile();
 
   return (
@@ -128,7 +126,6 @@ export default function AppShell() {
             <div style={{ fontWeight: 700, fontSize: 13.5 }}>{profile?.name || 'Carregando...'}</div>
             <div style={{ fontSize: 11.5, color: 'var(--ink-soft)' }}>{profile?.role}</div>
           </div>
-          <button onClick={() => signOut()}>Sair</button>
         </div>
       </aside>
       <main className="app-content">

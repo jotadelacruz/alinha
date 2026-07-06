@@ -199,6 +199,7 @@ function PasswordSection({ hasPassword }) {
 }
 
 export default function ConfiguracoesPage() {
+  const { signOut } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const [form, setForm] = useState(null);
   const [error, setError] = useState('');
@@ -315,7 +316,12 @@ export default function ConfiguracoesPage() {
           <form onSubmit={handleSave} className="settings-form">
             {tab === 'perfil' && (
               <section>
-                <h3>Perfil</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ marginBottom: 0 }}>Perfil</h3>
+                  <button type="button" onClick={() => signOut()}>
+                    Sair
+                  </button>
+                </div>
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome" />
                 <input value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder="Cargo" />
                 <input
