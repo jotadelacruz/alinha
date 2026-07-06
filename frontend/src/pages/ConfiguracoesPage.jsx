@@ -545,7 +545,7 @@ export default function ConfiguracoesPage() {
             {tab === 'mensagens' && (
               <section>
                 <h3>Modelos de mensagem</h3>
-                <label>
+                <label className="message-template-label">
                   Mensagem de cobrança
                   <textarea
                     placeholder={MESSAGE_EXAMPLES.charge}
@@ -554,7 +554,7 @@ export default function ConfiguracoesPage() {
                   />
                 </label>
 
-                <label>
+                <label className="message-template-label">
                   Mensagem de confirmação
                   <textarea
                     placeholder={MESSAGE_EXAMPLES.confirmation}
@@ -563,7 +563,7 @@ export default function ConfiguracoesPage() {
                   />
                 </label>
 
-                <label>
+                <label className="message-template-label">
                   Mensagem de pacote
                   <textarea
                     placeholder={MESSAGE_EXAMPLES.package}

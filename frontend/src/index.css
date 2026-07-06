@@ -1050,6 +1050,17 @@ textarea {
   align-self: flex-start;
 }
 
+.message-template-label {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  font-weight: 600 !important;
+}
+
+.message-template-label textarea {
+  min-height: 90px;
+}
+
 .settings-password-form {
   display: flex;
   flex-direction: column;
