@@ -1327,6 +1327,156 @@ textarea {
   background: var(--navy-dark);
 }
 
+/* ---------- Landing page ---------- */
+.landing {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.landing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.landing-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.landing-login-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--navy);
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.landing-login-btn:hover {
+  background: var(--navy-wash);
+}
+
+.landing-whatsapp-fab {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 30px;
+  background: #25d366;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
+  transition: filter 0.15s;
+}
+
+.landing-whatsapp-fab:hover {
+  filter: brightness(0.95);
+}
+
+.landing-hero {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 72px 32px 56px;
+  text-align: center;
+}
+
+.landing-hero h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+
+.landing-hero p {
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin-bottom: 32px;
+}
+
+.landing-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 14px 32px;
+  border-radius: 12px;
+  background: var(--navy);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15.5px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.landing-cta-btn:hover {
+  background: var(--navy-dark);
+}
+
+.landing-features {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 32px 80px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.landing-feature-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.landing-feature-card h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.landing-feature-card p {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.landing-footer {
+  text-align: center;
+  padding: 24px 32px 40px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 640px) {
+  .landing-hero h1 {
+    font-size: 30px;
+  }
+
+  .landing-whatsapp-fab span {
+    display: none;
+  }
+}
+
 .auth-form button.link {
   background: none;
   border: none;

@@ -9,6 +9,7 @@ import ClientesPage from './pages/ClientesPage'
 import ControleHorarioPage from './pages/ControleHorarioPage'
 import ConfiguracoesPage from './pages/ConfiguracoesPage'
 import FinanceiroPage from './pages/FinanceiroPage'
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import ProntuariosPage from './pages/ProntuariosPage'
@@ -17,7 +18,8 @@ import ResumoPage from './pages/ResumoPage'
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route
         path="/app"
         element={
