@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 
-// TODO: trocar pelo número de WhatsApp comercial do Alinha antes de divulgar a página.
-const WHATSAPP_CONTACT_NUMBER = '5511999999999';
+const WHATSAPP_CONTACT_NUMBER = '5553981407005';
 const WHATSAPP_CONTACT_MESSAGE = 'Olá! Quero saber mais sobre o Alinha.';
 
 function whatsappContactLink() {
