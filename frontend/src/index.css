@@ -1028,6 +1028,15 @@ textarea {
   width: 100%;
 }
 
+.settings-form {
+  max-width: none;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+
 .settings-form section label {
   flex-direction: row;
   align-items: center;
