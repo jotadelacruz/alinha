@@ -180,7 +180,7 @@ export default function LandingPage() {
         </section>
 
         <section className="landing-final-cta">
-          <h2>Pronta para organizar seu consultório?</h2>
+          <h2>Vamos dar o primeiro passo para a organização?</h2>
           <p>Comece agora, sem custo inicial e sem complicação.</p>
           <div className="landing-hero-actions" style={{ justifyContent: 'center' }}>
             <Link to="/login" className="landing-cta-btn landing-cta-inverse">
