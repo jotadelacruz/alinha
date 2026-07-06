@@ -47,6 +47,7 @@ class MessageTemplateSettings(CamelModel):
 
 class ProfileSettings(CamelModel):
     theme: str
+    color_theme: str
     agenda: AgendaSettings
     notifications: NotificationSettings
     office: OfficeSettings
@@ -70,6 +71,7 @@ class ProfileUpdate(CamelModel):
     initials: str | None = None
     photo_data_url: str | None = None
     theme: str | None = None
+    color_theme: str | None = None
     work_start: str | None = None
     work_end: str | None = None
     session_duration: int | None = None

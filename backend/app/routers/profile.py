@@ -20,6 +20,7 @@ def _to_profile_out(p: Profile) -> ProfileOut:
         photo_data_url=p.photo_url,
         settings={
             "theme": p.theme,
+            "color_theme": p.color_theme or "azul",
             "agenda": {
                 "work_start": str(p.work_start)[:5],
                 "work_end": str(p.work_end)[:5],

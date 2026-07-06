@@ -9,3 +9,7 @@ export function applyTheme(theme) {
     root.removeAttribute('data-theme');
   }
 }
+
+export function applyColorTheme(colorTheme) {
+  document.documentElement.setAttribute('data-color-theme', colorTheme || 'azul');
+}

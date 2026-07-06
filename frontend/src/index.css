@@ -39,6 +39,21 @@
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
+/* Tema de cor "Verde-Musgo" (paleta do MIV Alinha) — sobrescreve o acento --navy usado em toda a aplicação. */
+[data-color-theme='verde'] {
+  --navy: #1e4b43;
+  --navy-light: #4faf97;
+  --navy-dark: #163a34;
+  --navy-wash: #e2eeea;
+}
+
+[data-theme='dark'][data-color-theme='verde'] {
+  --navy: #7fae9b;
+  --navy-light: #9fc7b8;
+  --navy-dark: #4a6f63;
+  --navy-wash: #1f2e29;
+}
+
 body {
   transition: background 0.2s ease, color 0.2s ease;
 }
@@ -1064,6 +1079,39 @@ textarea {
 }
 
 .workday-chip.active {
+  background: var(--navy-wash);
+  border-color: var(--navy);
+  color: var(--navy);
+}
+
+.color-theme-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.color-theme-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.color-theme-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.color-theme-chip.active {
   background: var(--navy-wash);
   border-color: var(--navy);
   color: var(--navy);

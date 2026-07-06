@@ -3,7 +3,12 @@ import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { ALL_WEEK_DAYS } from '../lib/dateUtils';
-import { applyTheme } from '../lib/theme';
+import { applyColorTheme, applyTheme } from '../lib/theme';
+
+const COLOR_THEMES = [
+  { key: 'verde', label: 'Verde-Musgo', swatch: '#1e4b43' },
+  { key: 'azul', label: 'Azul', swatch: '#2b4c7e' },
+];
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
@@ -216,6 +221,7 @@ export default function ConfiguracoesPage() {
       initials: profile.initials,
       photoDataUrl: profile.photoDataUrl,
       theme: profile.settings.theme,
+      colorTheme: profile.settings.colorTheme,
       workStart: profile.settings.agenda.workStart,
       workEnd: profile.settings.agenda.workEnd,
       sessionDuration: profile.settings.agenda.sessionDuration,
@@ -377,6 +383,7 @@ export default function ConfiguracoesPage() {
             {tab === 'aparencia' && (
               <section>
                 <h3>Aparência</h3>
+                <label style={{ display: 'block', marginBottom: 8 }}>Modo</label>
                 <select
                   value={form.theme}
                   onChange={(e) => {
@@ -388,6 +395,24 @@ export default function ConfiguracoesPage() {
                   <option value="dark">Escuro</option>
                   <option value="system">Sistema</option>
                 </select>
+
+                <label style={{ display: 'block', marginTop: 16, marginBottom: 8 }}>Cor do tema</label>
+                <div className="color-theme-grid">
+                  {COLOR_THEMES.map((ct) => (
+                    <button
+                      key={ct.key}
+                      type="button"
+                      className={`color-theme-chip ${form.colorTheme === ct.key ? 'active' : ''}`}
+                      onClick={() => {
+                        setForm({ ...form, colorTheme: ct.key });
+                        applyColorTheme(ct.key);
+                      }}
+                    >
+                      <span className="color-theme-swatch" style={{ background: ct.swatch }} />
+                      {ct.label}
+                    </button>
+                  ))}
+                </div>
               </section>
             )}
 

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { applyTheme } from '../lib/theme';
+import { applyColorTheme, applyTheme } from '../lib/theme';
 
 const ProfileContext = createContext(null);
 
@@ -12,6 +12,7 @@ export function ProfileProvider({ children }) {
     const p = await api.get('/profile');
     setProfile(p);
     applyTheme(p.settings.theme);
+    applyColorTheme(p.settings.colorTheme);
     return p;
   }, []);
 
