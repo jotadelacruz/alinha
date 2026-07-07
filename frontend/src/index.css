@@ -1933,6 +1933,15 @@ textarea {
   font-size: 12.5px;
 }
 
+.auth-info {
+  background: var(--sage-wash);
+  color: var(--sage);
+  border-radius: 8px;
+  padding: 10px 13px;
+  font-size: 12.5px;
+  text-align: center;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

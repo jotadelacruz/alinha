@@ -14,6 +14,7 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import ProntuariosPage from './pages/ProntuariosPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import ResumoPage from './pages/ResumoPage'
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route
         path="/app"
         element={
