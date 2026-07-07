@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.routers import (
+    admin,
     appointments,
     bills,
     certificates,
@@ -47,6 +48,7 @@ app.include_router(session_records.router)
 app.include_router(packages.router)
 app.include_router(certificates.router)
 app.include_router(receipts.router)
+app.include_router(admin.router)
 app.include_router(data.router)
 
 

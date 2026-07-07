@@ -1385,6 +1385,70 @@ textarea {
   background: var(--paper);
 }
 
+/* ---------- Conta suspensa ---------- */
+.account-suspended-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--paper);
+  padding: 24px;
+}
+
+.account-suspended-card {
+  max-width: 420px;
+  text-align: center;
+  background: var(--white);
+  border: 1px solid var(--alert);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 36px 32px;
+}
+
+.account-suspended-card h2 {
+  color: var(--alert);
+  margin-bottom: 12px;
+}
+
+.account-suspended-card p {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+/* ---------- Admin ---------- */
+.admin-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.account-status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.account-status-pill.active {
+  background: color-mix(in srgb, var(--sage) 25%, transparent);
+  color: var(--sage);
+}
+
+.account-status-pill.suspended {
+  background: color-mix(in srgb, var(--alert) 20%, transparent);
+  color: var(--alert);
+}
+
 .auth-form {
   width: 100%;
   max-width: 380px;

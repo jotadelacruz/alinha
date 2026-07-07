@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import { RequireAuth } from './components/RequireAuth'
 import { ProfileProvider } from './context/ProfileContext'
 import { SessionTimerProvider } from './context/SessionTimerContext'
+import AdminPage from './pages/AdminPage'
 import AgendaPage from './pages/AgendaPage'
 import AppShell from './pages/AppShell'
 import AtestadosPage from './pages/AtestadosPage'
@@ -40,6 +41,7 @@ function App() {
         <Route path="prontuarios" element={<ProntuariosPage />} />
         <Route path="atestados" element={<AtestadosPage />} />
         <Route path="configuracoes" element={<ConfiguracoesPage />} />
+        <Route path="admin" element={<AdminPage />} />
       </Route>
     </Routes>
   )

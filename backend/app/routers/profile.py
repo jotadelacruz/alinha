@@ -18,6 +18,7 @@ def _to_profile_out(p: Profile) -> ProfileOut:
         role=p.role,
         initials=p.initials or "".join(w[0] for w in p.name.split() if w)[:2].upper(),
         photo_data_url=p.photo_url,
+        is_admin=p.is_admin,
         settings={
             "theme": p.theme,
             "color_theme": p.color_theme or "azul",

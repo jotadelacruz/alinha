@@ -62,6 +62,7 @@ class ProfileOut(CamelModel):
     role: str
     initials: str
     photo_data_url: str | None
+    is_admin: bool
     settings: ProfileSettings
 
 
@@ -307,3 +308,18 @@ class ReceiptCreate(ReceiptBase):
 
 class ReceiptOut(ReceiptBase):
     id: uuid.UUID
+
+
+# ---------- Admin (contratantes do Alinha) ----------
+class AdminAccountOut(CamelModel):
+    id: uuid.UUID
+    name: str
+    email: str
+    role: str
+    account_status: str
+    is_admin: bool
+    created_at: datetime.datetime
+
+
+class AdminAccountStatusUpdate(CamelModel):
+    account_status: str

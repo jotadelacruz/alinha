@@ -7,6 +7,7 @@ const ProfileContext = createContext(null);
 export function ProfileProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [suspendedMessage, setSuspendedMessage] = useState(null);
 
   const refreshProfile = useCallback(async () => {
     const p = await api.get('/profile');
@@ -18,12 +19,16 @@ export function ProfileProvider({ children }) {
 
   useEffect(() => {
     refreshProfile()
-      .catch(() => {})
+      .catch((e) => {
+        if (e.status === 403) setSuspendedMessage(e.message);
+      })
       .finally(() => setLoading(false));
   }, [refreshProfile]);
 
   return (
-    <ProfileContext.Provider value={{ profile, loading, refreshProfile, setProfile }}>{children}</ProfileContext.Provider>
+    <ProfileContext.Provider value={{ profile, loading, suspendedMessage, refreshProfile, setProfile }}>
+      {children}
+    </ProfileContext.Provider>
   );
 }
 

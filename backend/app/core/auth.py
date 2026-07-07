@@ -8,8 +8,10 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
 from jose.exceptions import JOSEError
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.database import get_db
 
 security = HTTPBearer()
 
@@ -64,9 +66,31 @@ def _decode_supabase_jwt(token: str) -> dict:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token inválido ou expirado") from exc
 
 
-def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(security)) -> uuid.UUID:
+def get_current_user_id(
+    credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)
+) -> uuid.UUID:
     payload = _decode_supabase_jwt(credentials.credentials)
     sub = payload.get("sub")
     if not sub:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token sem identificação de usuário")
-    return uuid.UUID(sub)
+    user_id = uuid.UUID(sub)
+
+    # Import local pra evitar import circular (models importa Base de database, não de auth).
+    from app.models.models import Profile
+
+    account_status = db.query(Profile.account_status).filter(Profile.id == user_id).scalar()
+    if account_status == "suspended":
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Conta suspensa por pendência de pagamento. Entre em contato com o suporte.",
+        )
+    return user_id
+
+
+def require_admin(user_id: uuid.UUID = Depends(get_current_user_id), db: Session = Depends(get_db)) -> uuid.UUID:
+    from app.models.models import Profile
+
+    is_admin = db.query(Profile.is_admin).filter(Profile.id == user_id).scalar()
+    if not is_admin:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Acesso restrito a administradores.")
+    return user_id

@@ -6,6 +6,7 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from app.core.auth import get_current_user_id
 from app.core.database import SessionLocal
@@ -34,6 +35,10 @@ def profile_row():
             work_days=["Segunda", "Terça", "Quarta", "Quinta", "Sexta"],
         )
     )
+    db.execute(
+        text("INSERT INTO auth.users (id, email) VALUES (:id, :email) ON CONFLICT (id) DO NOTHING"),
+        {"id": str(TEST_USER_ID), "email": "terapeuta.teste@example.com"},
+    )
     db.commit()
     db.close()
     yield
@@ -41,6 +46,7 @@ def profile_row():
     for model in _TABLES_IN_DELETE_ORDER:
         db.query(model).filter(model.owner_id == TEST_USER_ID).delete()
     db.query(Profile).filter(Profile.id == TEST_USER_ID).delete()
+    db.execute(text("DELETE FROM auth.users WHERE id = :id"), {"id": str(TEST_USER_ID)})
     db.commit()
     db.close()
 
@@ -252,3 +258,50 @@ def test_prontuario_password_legacy_sha256_hash_still_works():
     # e continuar validando a mesma senha, agora via bcrypt
     still_right = client.post("/profile/prontuario-password/verify", json={"password": "senhaAntiga"})
     assert still_right.json() == {"valid": True}
+
+
+def test_admin_endpoints_require_admin_flag():
+    # TEST_USER_ID não é admin por padrão -> acesso negado.
+    resp = client.get("/admin/accounts")
+    assert resp.status_code == 403, resp.text
+
+    # Promove TEST_USER_ID a admin diretamente no banco.
+    db = SessionLocal()
+    db.query(Profile).filter(Profile.id == TEST_USER_ID).update({"is_admin": True})
+    db.commit()
+    db.close()
+
+    resp = client.get("/admin/accounts")
+    assert resp.status_code == 200, resp.text
+    accounts = {a["id"]: a for a in resp.json()}
+    assert str(TEST_USER_ID) in accounts
+    assert accounts[str(TEST_USER_ID)]["email"] == "terapeuta.teste@example.com"
+    assert accounts[str(TEST_USER_ID)]["accountStatus"] == "active"
+
+    # Não é possível suspender uma conta de administrador.
+    resp = client.patch(f"/admin/accounts/{TEST_USER_ID}/status", json={"accountStatus": "suspended"})
+    assert resp.status_code == 400, resp.text
+
+    # Reverte pra não-admin e cria uma segunda conta pra testar a suspensão de verdade.
+    db = SessionLocal()
+    db.query(Profile).filter(Profile.id == TEST_USER_ID).update({"is_admin": False})
+    other_id = uuid.uuid4()
+    db.add(Profile(id=other_id, name="Outro Contratante", work_days=[]))
+    db.execute(
+        text("INSERT INTO auth.users (id, email) VALUES (:id, :email) ON CONFLICT (id) DO NOTHING"),
+        {"id": str(other_id), "email": "outro@example.com"},
+    )
+    db.query(Profile).filter(Profile.id == TEST_USER_ID).update({"is_admin": True})
+    db.commit()
+    db.close()
+
+    resp = client.patch(f"/admin/accounts/{other_id}/status", json={"accountStatus": "suspended"})
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["accountStatus"] == "suspended"
+
+    db = SessionLocal()
+    db.query(Profile).filter(Profile.id == TEST_USER_ID).update({"is_admin": False})
+    db.query(Profile).filter(Profile.id == other_id).delete()
+    db.execute(text("DELETE FROM auth.users WHERE id = :id"), {"id": str(other_id)})
+    db.commit()
+    db.close()

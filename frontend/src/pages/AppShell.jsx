@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 
 const NAV_ITEMS = [
@@ -87,8 +88,34 @@ const NAV_ITEMS = [
   },
 ];
 
+const ADMIN_NAV_ITEM = {
+  to: '/app/admin',
+  label: 'Admin',
+  icon: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 4h16v12H4z" />
+      <path d="M8 20h8M12 16v4" />
+    </svg>
+  ),
+};
+
 export default function AppShell() {
-  const { profile } = useProfile();
+  const { signOut } = useAuth();
+  const { profile, suspendedMessage } = useProfile();
+
+  if (suspendedMessage) {
+    return (
+      <div className="account-suspended-screen">
+        <div className="account-suspended-card">
+          <h2>Conta suspensa</h2>
+          <p>{suspendedMessage}</p>
+          <button onClick={() => signOut()}>Sair</button>
+        </div>
+      </div>
+    );
+  }
+
+  const navItems = profile?.isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
 
   return (
     <div className="app">
@@ -102,7 +129,7 @@ export default function AppShell() {
         </div>
 
         <nav className="app-nav">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end}>
               {item.icon}
               {item.label}

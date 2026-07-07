@@ -47,6 +47,8 @@ class Profile(Base):
     prontuario_password_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
     certificate_logo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     package_alert_threshold: Mapped[int] = mapped_column(Integer, default=2)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    account_status: Mapped[str] = mapped_column(Text, default="active")
     created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
