@@ -301,6 +301,16 @@ table {
   height: 100%;
 }
 
+.client-blocked-banner {
+  background: var(--alert-wash);
+  color: var(--alert);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
 .client-card:hover {
   border-color: var(--navy-light);
 }

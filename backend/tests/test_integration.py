@@ -121,6 +121,63 @@ def test_finance_calculation_with_credit_surplus():
     assert batch[client_id]["balance"] == fin["balance"]
 
 
+def test_client_blocked_after_three_unpaid_sessions():
+    resp = client.post(
+        "/clients",
+        json={"name": "Cliente Bloqueado", "value": 150, "day": "-", "time": "-", "status": "ativo"},
+    )
+    client_id = resp.json()["id"]
+
+    month_iso = datetime.date.today().replace(day=1).isoformat()
+    client.put(
+        "/payments",
+        json={"clientId": client_id, "referenceMonthIso": month_iso, "sessions": 3, "status": "aberto"},
+    )
+
+    fin = client.get(f"/finance/client/{client_id}", params={"month_iso": month_iso}).json()
+    assert fin["unpaidSessions"] == 3
+    assert fin["blocked"] is True
+
+    appt_date = datetime.date.today().isoformat()
+    resp = client.post(
+        "/appointments",
+        json={
+            "clientId": client_id,
+            "dateIso": appt_date,
+            "time": "10:00",
+            "modality": "Presencial",
+            "status": "confirmed",
+        },
+    )
+    assert resp.status_code == 403, resp.text
+    assert "bloqueado" in resp.json()["detail"].lower()
+
+    # Após pagar as 3 sessões, o bloqueio deve ser liberado.
+    tx = client.post(
+        "/payment-transactions",
+        json={
+            "clientId": client_id,
+            "referenceMonthIso": month_iso,
+            "amount": 450,
+            "paymentDate": datetime.date.today().isoformat(),
+            "paymentMethod": "PIX",
+        },
+    )
+    assert tx.status_code == 200, tx.text
+
+    resp = client.post(
+        "/appointments",
+        json={
+            "clientId": client_id,
+            "dateIso": appt_date,
+            "time": "11:00",
+            "modality": "Presencial",
+            "status": "confirmed",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+
+
 def test_finance_summary_returns_camel_case():
     resp = client.get("/finance/summary", params={"month_iso": datetime.date.today().replace(day=1).isoformat()})
     assert resp.status_code == 200, resp.text

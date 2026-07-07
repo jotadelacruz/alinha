@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.models.models import Appointment
 from app.schemas.schemas import AppointmentCreate, AppointmentOut, AppointmentStatusUpdate
 from app.services.appointment_service import ensure_upcoming_appointments
+from app.services.finance_service import compute_client_finance
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
@@ -48,6 +49,15 @@ def list_appointments(
 def create_appointment(
     body: AppointmentCreate, user_id: uuid.UUID = Depends(get_current_user_id), db: Session = Depends(get_db)
 ):
+    month_iso = body.date_iso.replace(day=1)
+    fin = compute_client_finance(db, user_id, body.client_id, month_iso)
+    if fin["blocked"]:
+        raise HTTPException(
+            403,
+            f"Cliente bloqueado para novos agendamentos: {fin['unpaid_sessions']} sessões sem pagamento este mês. "
+            "Regularize o pagamento em Financeiro para liberar.",
+        )
+
     appt = Appointment(
         owner_id=user_id,
         client_id=body.client_id,

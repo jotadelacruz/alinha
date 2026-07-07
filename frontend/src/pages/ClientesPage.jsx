@@ -3,7 +3,9 @@ import { api } from '../lib/api';
 import { useProfile } from '../context/ProfileContext';
 import { colorFor, initials } from '../lib/avatar';
 import { downloadImportTemplate, exportClientsCSV, parseCSV, parseClientRows } from '../lib/csv';
-import { formatBR } from '../lib/dateUtils';
+import { formatBR, isoDate } from '../lib/dateUtils';
+
+const CURRENT_MONTH_ISO = isoDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
 const EMPTY_FORM = {
   name: '',
@@ -124,6 +126,7 @@ export default function ClientesPage() {
   const { profile } = useProfile();
   const defaultSessionDuration = profile?.settings?.agenda?.sessionDuration || 50;
   const [clients, setClients] = useState([]);
+  const [finances, setFinances] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
@@ -141,7 +144,12 @@ export default function ClientesPage() {
   async function reload() {
     setLoading(true);
     try {
-      setClients(await api.get('/clients'));
+      const [clientList, finList] = await Promise.all([
+        api.get('/clients'),
+        api.get('/finance/clients', { month_iso: CURRENT_MONTH_ISO }),
+      ]);
+      setClients(clientList);
+      setFinances(Object.fromEntries(finList.map((f) => [f.clientId, f])));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -349,25 +357,33 @@ export default function ClientesPage() {
       )}
 
       <div className="client-grid">
-        {clients.map((c) => (
-          <div key={c.id} className="client-card" onClick={() => setSelectedClient(c)}>
-            <div className="client-top">
-              <div className="client-avatar" style={{ background: colorFor(c.name) }}>
-                {initials(c.name)}
-              </div>
-              <div>
-                <div className="client-name">{c.name}</div>
-                <div className="client-since">
-                  R$ {c.value} · {c.sessionDuration || defaultSessionDuration} min
+        {clients.map((c) => {
+          const fin = finances[c.id];
+          return (
+            <div key={c.id} className="client-card" onClick={() => setSelectedClient(c)}>
+              {fin?.blocked && (
+                <div className="client-blocked-banner">
+                  🔒 {fin.unpaidSessions} sessões sem pagamento
+                </div>
+              )}
+              <div className="client-top">
+                <div className="client-avatar" style={{ background: colorFor(c.name) }}>
+                  {initials(c.name)}
+                </div>
+                <div>
+                  <div className="client-name">{c.name}</div>
+                  <div className="client-since">
+                    R$ {c.value} · {c.sessionDuration || defaultSessionDuration} min
+                  </div>
                 </div>
               </div>
+              <div className="client-footer">
+                <span className={`client-status ${c.status}`}>{c.status === 'ativo' ? 'Ativo' : 'Em pausa'}</span>
+                <span className="next-session">Ver detalhes →</span>
+              </div>
             </div>
-            <div className="client-footer">
-              <span className={`client-status ${c.status}`}>{c.status === 'ativo' ? 'Ativo' : 'Em pausa'}</span>
-              <span className="next-session">Ver detalhes →</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {clients.length === 0 && <p>Nenhum cliente cadastrado ainda.</p>}
       </div>
     </div>

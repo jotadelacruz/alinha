@@ -193,6 +193,8 @@ class ClientFinanceOut(CamelModel):
     credit_applied: float
     balance: float
     status: str
+    unpaid_sessions: int
+    blocked: bool
 
 
 class FinanceSummaryOut(CamelModel):
