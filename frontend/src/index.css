@@ -141,11 +141,22 @@ a {
   flex-shrink: 0;
 }
 
-.brand-mark-logo {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 5px;
+.brand-mark-plain {
+  width: auto;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.brand-mark-plain-dark {
+  display: none;
+}
+
+[data-theme='dark'] .brand-mark-plain-light {
+  display: none;
+}
+
+[data-theme='dark'] .brand-mark-plain-dark {
+  display: block;
 }
 
 .brand-name {
