@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import logoOffwhite from '../assets/brand/logo-offwhite.png';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 
@@ -121,7 +122,9 @@ export default function AppShell() {
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">A</div>
+          <div className="brand-mark">
+            <img src={logoOffwhite} alt="" className="brand-mark-logo" />
+          </div>
           <div>
             <div className="brand-name">Alinha</div>
             <div className="brand-sub">Gestão Inteligente para Atendimentos</div>
