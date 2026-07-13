@@ -1,4 +1,4 @@
-# Alinha — Gestão Inteligente para Psicologia
+# Alinha — Gestão Inteligente
 
 Sistema de gestão de consultório para psicoterapeutas: agenda com recorrência automática, cadastro de clientes, financeiro (recebimentos e contas a pagar) e prontuários protegidos por senha.
 
