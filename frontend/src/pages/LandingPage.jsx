@@ -3,7 +3,7 @@ import logoVerde from '../assets/brand/logo-verde.png';
 import logoOffwhite from '../assets/brand/logo-offwhite.png';
 
 const WHATSAPP_CONTACT_NUMBER = '5553981407005';
-const WHATSAPP_CONTACT_MESSAGE = 'Olá! Quero saber mais sobre o Alinha.';
+const WHATSAPP_CONTACT_MESSAGE = 'Oi! Vim pelo site e quero saber mais sobre o Alinha.';
 
 function whatsappContactLink() {
   return `https://wa.me/${WHATSAPP_CONTACT_NUMBER}?text=${encodeURIComponent(WHATSAPP_CONTACT_MESSAGE)}`;
@@ -11,8 +11,8 @@ function whatsappContactLink() {
 
 const FEATURES = [
   {
-    title: 'Agenda inteligente',
-    description: 'Consultas recorrentes, confirmação por WhatsApp e visão semanal em grade ou lista.',
+    title: 'Agenda sem dor de cabeça',
+    description: 'Sessão recorrente marcada sozinha, confirmação direto pelo WhatsApp e a semana inteira num golpe de vista.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <rect x="3" y="5" width="18" height="16" rx="2" />
@@ -21,8 +21,8 @@ const FEATURES = [
     ),
   },
   {
-    title: 'Prontuários protegidos',
-    description: 'Acesso por senha e registro de auditoria — pensado para dados sensíveis de saúde.',
+    title: 'Prontuário com cadeado de verdade',
+    description: 'Acesso por senha e log de quem entrou e quando — porque prontuário de paciente não é planilha do Excel.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z" />
@@ -32,7 +32,7 @@ const FEATURES = [
   },
   {
     title: 'Financeiro sem planilha',
-    description: 'Cobranças, pacotes de sessões e contas do consultório em um só lugar.',
+    description: 'Cobrança, pacote de sessão e conta do consultório — tudo rastreado, sem fórmula quebrada.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1.2-5 3 2.2 2.7 5 3 5 1.1 5 3-2.2 3-5 3-5-1.1-5-3" />
@@ -40,8 +40,8 @@ const FEATURES = [
     ),
   },
   {
-    title: 'Atestados e documentos',
-    description: 'Modelos prontos com a logo do seu consultório, prontos para imprimir.',
+    title: 'Atestado pronto em segundos',
+    description: 'Modelo com a logo do seu consultório, pronto pra imprimir.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -50,8 +50,8 @@ const FEATURES = [
     ),
   },
   {
-    title: 'Clientes organizados',
-    description: 'Cadastro completo, histórico de sessões e status sempre à mão.',
+    title: 'Clientes sem bagunça',
+    description: 'Cadastro completo, histórico de sessão e status sempre à mão — sem abrir três telas pra achar um telefone.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="9" cy="8" r="3.2" />
@@ -63,7 +63,7 @@ const FEATURES = [
   },
   {
     title: 'Controle de horário',
-    description: 'Cronômetro de sessão com aviso automático quando o tempo está acabando.',
+    description: 'Cronômetro de sessão que avisa quando o tempo tá acabando, sem você ficar de olho no relógio.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="12" cy="12" r="9" />
@@ -76,15 +76,15 @@ const FEATURES = [
 const STEPS = [
   {
     title: 'Crie sua conta',
-    description: 'Cadastro rápido, sem cartão de crédito, pronto para usar em poucos minutos.',
+    description: 'Cadastro leva menos de 5 minutos. Sem cartão de crédito, sem pegadinha.',
   },
   {
     title: 'Organize agenda e clientes',
-    description: 'Importe sua base atual ou cadastre aos poucos — a agenda e o financeiro se atualizam sozinhos.',
+    description: 'Importe sua base atual ou cadastre aos poucos. A agenda e o financeiro se atualizam sozinhos.',
   },
   {
     title: 'Acompanhe com segurança',
-    description: 'Prontuários protegidos por senha, atestados prontos e visão financeira clara, tudo em um lugar.',
+    description: 'Prontuário com senha, atestado pronto e financeiro claro — sem decorar fórmula nem torcer pra planilha não travar.',
   },
 ];
 
@@ -114,11 +114,11 @@ export default function LandingPage() {
       <main>
         <section className="landing-hero">
           <div className="landing-hero-copy">
-            <span className="landing-badge">Feito para psicólogas e psicólogos</span>
-            <h1>Gestão inteligente para o seu consultório</h1>
+            <span className="landing-badge">Para psicólogos, nutricionistas, fisioterapeutas e fonoaudiólogos</span>
+            <h1>Seu consultório, fora da planilha</h1>
             <p>
-              Agenda, prontuários, financeiro e atestados em um só sistema — para você passar menos tempo na
-              planilha e mais tempo com quem importa.
+              Agenda, prontuário, financeiro e atestado no mesmo lugar. Menos aba aberta, menos post-it — mais
+              tempo pra quem realmente importa: seu paciente.
             </p>
             <div className="landing-hero-actions">
               <Link to="/login" className="landing-cta-btn">
@@ -144,7 +144,7 @@ export default function LandingPage() {
         </section>
 
         <section className="landing-features">
-          <h2 className="landing-section-title">Tudo que o seu consultório precisa</h2>
+          <h2 className="landing-section-title">O que muda no seu dia a dia</h2>
           <div className="landing-features-grid">
             {FEATURES.map((f) => (
               <div key={f.title} className="landing-feature-card">
@@ -171,17 +171,18 @@ export default function LandingPage() {
 
         <section className="landing-security">
           <div className="landing-security-content">
-            <h2>Seus dados, e os dos seus clientes, protegidos de verdade</h2>
+            <h2>Dado de paciente não é dado qualquer</h2>
             <p>
-              Prontuários com senha própria, registro de auditoria de acesso e conformidade com a LGPD — porque
-              dados de saúde exigem mais cuidado do que uma planilha pode oferecer.
+              Prontuário com senha própria, log de quem acessou e quando, e conformidade com a LGPD. Dado de
+              saúde pede mais cuidado do que uma aba de Excel consegue dar — e isso não é exagero nosso, é
+              exigência legal.
             </p>
           </div>
         </section>
 
         <section className="landing-final-cta">
-          <h2>Vamos dar o primeiro passo para a organização?</h2>
-          <p>Comece agora, sem custo inicial e sem complicação.</p>
+          <h2>Chega de planilha. Comece agora.</h2>
+          <p>Sem cartão de crédito, sem custo pra testar.</p>
           <div className="landing-hero-actions" style={{ justifyContent: 'center' }}>
             <Link to="/login" className="landing-cta-btn landing-cta-inverse">
               Começar agora
