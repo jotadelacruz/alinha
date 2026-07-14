@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { AuthBrand } from '../components/AuthBrand';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
@@ -40,7 +41,7 @@ export default function LoginPage() {
     return (
       <div className="auth-screen">
         <form onSubmit={handleForgotPassword} className="auth-form">
-          <h1>Alinha</h1>
+          <AuthBrand />
           <p>Recuperar senha</p>
 
           <input
@@ -76,7 +77,7 @@ export default function LoginPage() {
   return (
     <div className="auth-screen">
       <form onSubmit={handleSubmit} className="auth-form">
-        <h1>Alinha</h1>
+        <AuthBrand />
         <p>{mode === 'login' ? 'Entrar na sua conta' : 'Criar conta'}</p>
 
         {mode === 'signup' && (

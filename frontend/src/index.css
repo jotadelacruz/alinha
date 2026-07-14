@@ -1481,9 +1481,40 @@ textarea {
   margin: 0;
 }
 
-.auth-form h1 {
-  text-align: center;
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.auth-brand-mark {
+  height: 40px;
+  width: auto;
+}
+
+.auth-brand-mark-dark {
+  display: none;
+}
+
+[data-theme='dark'] .auth-brand-mark-light {
+  display: none;
+}
+
+[data-theme='dark'] .auth-brand-mark-dark {
+  display: block;
+}
+
+.auth-brand-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
   font-size: 22px;
+  color: #1e4b43;
+}
+
+[data-theme='dark'] .auth-brand-name {
+  color: #7fae9b;
 }
 
 .auth-form > p {
@@ -1494,14 +1525,14 @@ textarea {
 }
 
 .auth-form button[type='submit'] {
-  background: var(--navy);
+  background: #1e4b43;
   color: white;
   border: none;
   justify-content: center;
 }
 
 .auth-form button[type='submit']:hover {
-  background: var(--navy-dark);
+  background: #163a34;
 }
 
 /* ---------- Landing page (Sistema de Marca 2025) ---------- */
@@ -1937,10 +1968,14 @@ textarea {
 .auth-form button.link {
   background: none;
   border: none;
-  color: var(--navy);
+  color: #1e4b43;
   font-size: 12.5px;
   align-self: center;
   padding: 4px;
+}
+
+[data-theme='dark'] .auth-form button.link {
+  color: #7fae9b;
 }
 
 .auth-error {

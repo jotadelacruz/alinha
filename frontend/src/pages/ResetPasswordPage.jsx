@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthBrand } from '../components/AuthBrand';
 import { useAuth } from '../context/AuthContext';
 
 export default function ResetPasswordPage() {
@@ -34,7 +35,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="auth-screen">
       <form onSubmit={handleSubmit} className="auth-form">
-        <h1>Alinha</h1>
+        <AuthBrand />
         <p>Definir nova senha</p>
 
         {done ? (
