@@ -29,12 +29,15 @@ export function exportClientsCSV(clients) {
     'Nome',
     'Telefone',
     'E-mail',
+    'CPF',
+    'Endereço',
     'Cliente desde',
     'Frequência',
     'Dia fixo',
     'Horário fixo',
     'Modalidade',
     'Valor da sessão',
+    'Duração personalizada (min)',
     'Status',
     'Observações',
   ];
@@ -42,12 +45,15 @@ export function exportClientsCSV(clients) {
     c.name,
     c.phone || '',
     c.email || '',
+    c.cpf || '',
+    c.address || '',
     c.since,
     c.frequency,
     c.day || '',
     c.time || '',
     c.modality,
     c.value,
+    c.sessionDuration || '',
     c.status === 'ativo' ? 'Ativo' : 'Em pausa',
     c.notes || '',
   ]);
@@ -58,11 +64,14 @@ const IMPORT_TEMPLATE_HEADERS = [
   'Nome',
   'Telefone',
   'E-mail',
+  'CPF',
+  'Endereço',
   'Frequência',
   'Dia fixo',
   'Horário fixo',
   'Modalidade',
   'Valor da sessão',
+  'Duração personalizada (min)',
   'Status',
   'Observações',
 ];
@@ -72,11 +81,14 @@ export function downloadImportTemplate() {
     'Maria da Silva',
     '(51) 99999-0000',
     'maria@email.com',
+    '123.456.789-00',
+    'Rua das Flores, 123 - Porto Alegre/RS',
     'Semanal',
     'Segunda',
     '08:00',
     'Presencial',
     '210',
+    '',
     'Ativo',
     'Cliente exemplo - pode apagar esta linha',
   ];
@@ -159,11 +171,14 @@ export function parseClientRows(rows) {
     name: colIndex(['Nome']),
     phone: colIndex(['Telefone']),
     email: colIndex(['E-mail', 'Email']),
+    cpf: colIndex(['CPF']),
+    address: colIndex(['Endereço', 'Endereco']),
     frequency: colIndex(['Frequência', 'Frequencia']),
     day: colIndex(['Dia fixo', 'Dia']),
     time: colIndex(['Horário fixo', 'Horario fixo', 'Horário', 'Horario']),
     modality: colIndex(['Modalidade']),
     value: colIndex(['Valor da sessão', 'Valor da sessao', 'Valor']),
+    sessionDuration: colIndex(['Duração personalizada (min)', 'Duracao personalizada (min)', 'Duração personalizada', 'Duracao personalizada']),
     status: colIndex(['Status']),
     notes: colIndex(['Observações', 'Observacoes']),
   };
@@ -202,15 +217,21 @@ export function parseClientRows(rows) {
     const statusRaw = (idx.status !== -1 ? r[idx.status] : '').trim().toLowerCase();
     const status = statusRaw === 'em pausa' || statusRaw === 'pausa' ? 'pausa' : 'ativo';
 
+    const durationRaw = (idx.sessionDuration !== -1 ? r[idx.sessionDuration] : '').trim();
+    const sessionDuration = Number(durationRaw) > 0 ? Number(durationRaw) : null;
+
     valid.push({
       name,
       phone: idx.phone !== -1 ? (r[idx.phone] || '').trim() : '',
       email: idx.email !== -1 ? (r[idx.email] || '').trim() : '',
+      cpf: idx.cpf !== -1 ? (r[idx.cpf] || '').trim() : '',
+      address: idx.address !== -1 ? (r[idx.address] || '').trim() : '',
       frequency,
       day: status === 'ativo' ? day : '-',
       time: status === 'ativo' ? time : '-',
       modality,
       value,
+      sessionDuration,
       status,
       notes: idx.notes !== -1 ? (r[idx.notes] || '').trim() : '',
     });
