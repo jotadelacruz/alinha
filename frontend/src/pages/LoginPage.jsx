@@ -3,6 +3,26 @@ import { Navigate } from 'react-router-dom';
 import { AuthBrand } from '../components/AuthBrand';
 import { useAuth } from '../context/AuthContext';
 
+const AUTH_ERROR_MESSAGES = {
+  'Invalid login credentials': 'E-mail ou senha incorretos.',
+  'Email not confirmed': 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
+  'User already registered': 'Este e-mail já está cadastrado.',
+  'Password should be at least 6 characters': 'A senha precisa ter pelo menos 6 caracteres.',
+  'Unable to validate email address: invalid format': 'E-mail inválido.',
+  'Email rate limit exceeded': 'Muitas tentativas. Aguarde alguns minutos e tente novamente.',
+  'User not found': 'Não encontramos uma conta com esse e-mail.',
+};
+
+function translateAuthError(message) {
+  if (!message) return 'Ocorreu um erro. Tente novamente.';
+  const key = Object.keys(AUTH_ERROR_MESSAGES).find((k) => message.includes(k));
+  if (key) return AUTH_ERROR_MESSAGES[key];
+  if (/for security purposes/i.test(message)) {
+    return 'Por segurança, aguarde alguns segundos antes de tentar novamente.';
+  }
+  return 'Não foi possível concluir a operação. Tente novamente.';
+}
+
 export default function LoginPage() {
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword } = useAuth();
   const [mode, setMode] = useState('login'); // 'login' | 'signup' | 'forgot'
@@ -23,7 +43,7 @@ export default function LoginPage() {
     const { error } =
       mode === 'login' ? await signInWithEmail(email, password) : await signUpWithEmail(email, password, name);
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) setError(translateAuthError(error.message));
   }
 
   async function handleForgotPassword(e) {
@@ -33,7 +53,7 @@ export default function LoginPage() {
     setLoading(true);
     const { error } = await resetPassword(email);
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) setError(translateAuthError(error.message));
     else setInfo('Enviamos um e-mail com o link para redefinir sua senha.');
   }
 
