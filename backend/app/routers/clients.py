@@ -30,6 +30,7 @@ def _to_out(c: Client) -> ClientOut:
         cpf=c.cpf or "",
         address=c.address or "",
         session_duration=c.session_duration,
+        birth_date=c.birth_date,
     )
 
 
@@ -47,6 +48,7 @@ def _apply(client: Client, body: ClientCreate) -> None:
     client.cpf = body.cpf
     client.address = body.address
     client.session_duration = body.session_duration
+    client.birth_date = body.birth_date
 
 
 @router.get("", response_model=list[ClientOut], response_model_by_alias=True)

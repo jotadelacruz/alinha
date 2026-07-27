@@ -112,6 +112,7 @@ class ClientBase(CamelModel):
     cpf: str = ""
     address: str = ""
     session_duration: int | None = None
+    birth_date: datetime.date | None = None
 
 
 class ClientCreate(ClientBase):

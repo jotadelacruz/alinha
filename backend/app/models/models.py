@@ -72,6 +72,7 @@ class Client(Base):
     cpf: Mapped[str | None] = mapped_column(Text, nullable=True)
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
     session_duration: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    birth_date: Mapped[object | None] = mapped_column(Date, nullable=True)
     created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

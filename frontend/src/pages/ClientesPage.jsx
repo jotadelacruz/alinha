@@ -13,6 +13,7 @@ const EMPTY_FORM = {
   email: '',
   cpf: '',
   address: '',
+  birthDate: '',
   frequency: 'Semanal',
   day: '-',
   time: '-',
@@ -30,6 +31,7 @@ function ClientDetail({ client, onBack, onSaved, onDeleted }) {
     email: client.email || '',
     cpf: client.cpf || '',
     address: client.address || '',
+    birthDate: client.birthDate || '',
     frequency: client.frequency || 'Semanal',
     day: client.day || '-',
     time: client.time || '-',
@@ -49,6 +51,7 @@ function ClientDetail({ client, onBack, onSaved, onDeleted }) {
       await api.put(`/clients/${client.id}`, {
         ...form,
         sessionDuration: form.sessionDuration === '' ? null : Number(form.sessionDuration),
+        birthDate: form.birthDate === '' ? null : form.birthDate,
       });
       onSaved();
     } catch (e) {
@@ -83,6 +86,14 @@ function ClientDetail({ client, onBack, onSaved, onDeleted }) {
           value={form.address}
           onChange={(e) => setForm({ ...form, address: e.target.value })}
         />
+        <label>
+          Data de nascimento
+          <input
+            type="date"
+            value={form.birthDate}
+            onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
+          />
+        </label>
         <input
           placeholder="Valor por consulta"
           type="number"
@@ -160,7 +171,11 @@ export default function ClientesPage() {
   async function handleCreate(e) {
     e.preventDefault();
     try {
-      await api.post('/clients', { ...form, sessionDuration: form.sessionDuration === '' ? null : Number(form.sessionDuration) });
+      await api.post('/clients', {
+        ...form,
+        sessionDuration: form.sessionDuration === '' ? null : Number(form.sessionDuration),
+        birthDate: form.birthDate === '' ? null : form.birthDate,
+      });
       setForm(EMPTY_FORM);
       setShowForm(false);
       await reload();
@@ -339,6 +354,14 @@ export default function ClientesPage() {
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
           />
+          <label>
+            Data de nascimento
+            <input
+              type="date"
+              value={form.birthDate}
+              onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
+            />
+          </label>
           <input
             placeholder="Valor por consulta"
             type="number"

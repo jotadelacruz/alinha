@@ -1,4 +1,4 @@
-import { TIME_SLOTS, WEEK_DAYS, isoDate } from './dateUtils';
+import { TIME_SLOTS, WEEK_DAYS, formatBR, isoDate } from './dateUtils';
 
 /** Converte um array de objetos em texto CSV, escapando vírgulas, aspas e quebras de linha. */
 export function buildCSV(headers, rows) {
@@ -31,6 +31,7 @@ export function exportClientsCSV(clients) {
     'E-mail',
     'CPF',
     'Endereço',
+    'Data de nascimento',
     'Cliente desde',
     'Frequência',
     'Dia fixo',
@@ -47,6 +48,7 @@ export function exportClientsCSV(clients) {
     c.email || '',
     c.cpf || '',
     c.address || '',
+    c.birthDate ? formatBR(c.birthDate) : '',
     c.since,
     c.frequency,
     c.day || '',
@@ -66,6 +68,7 @@ const IMPORT_TEMPLATE_HEADERS = [
   'E-mail',
   'CPF',
   'Endereço',
+  'Data de nascimento',
   'Frequência',
   'Dia fixo',
   'Horário fixo',
@@ -83,6 +86,7 @@ export function downloadImportTemplate() {
     'maria@email.com',
     '123.456.789-00',
     'Rua das Flores, 123 - Porto Alegre/RS',
+    '15/03/1990',
     'Semanal',
     'Segunda',
     '08:00',
@@ -154,6 +158,17 @@ function normalizeHeader(s) {
 const FREQUENCY_VALUES = ['Semanal', 'Quinzenal', 'Mensal', 'Pausada'];
 const MODALITY_VALUES = ['Presencial', 'Online'];
 
+/** Aceita DD/MM/AAAA (padrão brasileiro) ou AAAA-MM-DD (ISO) e normaliza pra ISO. */
+function parseBirthDate(raw) {
+  const s = (raw || '').trim();
+  if (!s) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const [, d, mo, y] = m;
+  return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
+}
+
 /** Converte as linhas brutas do CSV em objetos de cliente prontos, junto com uma lista de avisos. */
 export function parseClientRows(rows) {
   if (rows.length === 0) return { valid: [], skipped: [] };
@@ -173,6 +188,7 @@ export function parseClientRows(rows) {
     email: colIndex(['E-mail', 'Email']),
     cpf: colIndex(['CPF']),
     address: colIndex(['Endereço', 'Endereco']),
+    birthDate: colIndex(['Data de nascimento']),
     frequency: colIndex(['Frequência', 'Frequencia']),
     day: colIndex(['Dia fixo', 'Dia']),
     time: colIndex(['Horário fixo', 'Horario fixo', 'Horário', 'Horario']),
@@ -226,6 +242,7 @@ export function parseClientRows(rows) {
       email: idx.email !== -1 ? (r[idx.email] || '').trim() : '',
       cpf: idx.cpf !== -1 ? (r[idx.cpf] || '').trim() : '',
       address: idx.address !== -1 ? (r[idx.address] || '').trim() : '',
+      birthDate: idx.birthDate !== -1 ? parseBirthDate(r[idx.birthDate]) : null,
       frequency,
       day: status === 'ativo' ? day : '-',
       time: status === 'ativo' ? time : '-',
