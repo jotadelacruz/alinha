@@ -11,7 +11,7 @@ from sqlalchemy import text
 from app.core.auth import get_current_user_id
 from app.core.database import SessionLocal
 from app.main import app
-from app.models.models import Profile
+from app.models.models import Profile, ProntuarioAccessLog
 from app.routers.data import _TABLES_IN_DELETE_ORDER
 
 TEST_USER_ID = uuid.uuid4()
@@ -304,4 +304,35 @@ def test_admin_endpoints_require_admin_flag():
     db.query(Profile).filter(Profile.id == other_id).delete()
     db.execute(text("DELETE FROM auth.users WHERE id = :id"), {"id": str(other_id)})
     db.commit()
+    db.close()
+
+
+def test_delete_all_data_removes_prontuario_access_log():
+    """Regressão: prontuario_access_log tem FK NOT NULL pra clients sem cascade — se
+    não for apagado antes de clients, o DELETE /data/all falha inteiro (transação
+    revertida) sempre que o usuário já tiver aberto algum prontuário."""
+    resp = client.post(
+        "/clients",
+        json={"name": "Cliente Zona de Risco", "value": 150, "day": "-", "time": "-", "status": "ativo"},
+    )
+    assert resp.status_code == 200, resp.text
+    client_id = resp.json()["id"]
+
+    resp = client.post(
+        "/session-records",
+        json={"clientId": client_id, "date": datetime.date.today().isoformat(), "complaint": "teste"},
+    )
+    assert resp.status_code == 200, resp.text
+
+    db = SessionLocal()
+    assert db.query(ProntuarioAccessLog).filter(ProntuarioAccessLog.owner_id == TEST_USER_ID).count() > 0
+    db.close()
+
+    resp = client.delete("/data/all")
+    assert resp.status_code == 200, resp.text
+
+    assert client.get("/clients").json() == []
+
+    db = SessionLocal()
+    assert db.query(ProntuarioAccessLog).filter(ProntuarioAccessLog.owner_id == TEST_USER_ID).count() == 0
     db.close()

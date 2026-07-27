@@ -14,6 +14,7 @@ from app.models.models import (
     Package,
     Payment,
     PaymentTransaction,
+    ProntuarioAccessLog,
     Receipt,
     SessionRecord,
 )
@@ -23,6 +24,7 @@ router = APIRouter(prefix="/data", tags=["data"])
 # Ordem importa: tabelas com FK para clients/appointments primeiro (mesma ordem de
 # frontend-legacy/js/data.js:649, deleteAllUserData).
 _TABLES_IN_DELETE_ORDER = [
+    ProntuarioAccessLog,
     SessionRecord,
     Certificate,
     Receipt,
