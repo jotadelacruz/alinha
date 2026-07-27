@@ -156,6 +156,12 @@ export default function AppShell() {
             <div style={{ fontWeight: 700, fontSize: 13.5 }}>{profile?.name || 'Carregando...'}</div>
             <div style={{ fontSize: 11.5, color: 'var(--ink-soft)' }}>{profile?.role}</div>
           </div>
+          <button type="button" className="sidebar-logout-btn" title="Sair" onClick={() => signOut()}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+              <path d="M16 17l5-5-5-5M21 12H9" />
+            </svg>
+          </button>
         </div>
       </aside>
       <main className="app-content">

@@ -223,6 +223,30 @@ nav.app-nav a.active svg {
   padding-top: 18px;
 }
 
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--ink-soft);
+}
+
+.sidebar-logout-btn:hover {
+  background: var(--paper-soft);
+  color: var(--alert);
+}
+
+.sidebar-logout-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
 .app-content {
   flex: 1;
   padding: 32px 40px 60px;
