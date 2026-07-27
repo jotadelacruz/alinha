@@ -25,6 +25,8 @@ const EMPTY_FORM = {
 };
 
 function ClientDetail({ client, onBack, onSaved, onDeleted }) {
+  const { profile } = useProfile();
+  const defaultSessionDuration = profile?.settings?.agenda?.sessionDuration || 50;
   const [form, setForm] = useState({
     name: client.name || '',
     phone: client.phone || '',
@@ -94,29 +96,48 @@ function ClientDetail({ client, onBack, onSaved, onDeleted }) {
             onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
           />
         </label>
-        <input
-          placeholder="Valor por consulta"
-          type="number"
-          value={form.value}
-          onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
-          required
-        />
-        <input
-          placeholder="Duração personalizada (min)"
-          type="number"
-          value={form.sessionDuration}
-          onChange={(e) => setForm({ ...form, sessionDuration: e.target.value })}
-        />
-        <select value={form.frequency} onChange={(e) => setForm({ ...form, frequency: e.target.value })}>
-          <option value="Semanal">Semanal</option>
-          <option value="Quinzenal">Quinzenal</option>
-          <option value="Mensal">Mensal</option>
-          <option value="Pausada">Pausada</option>
-        </select>
-        <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-          <option value="ativo">Ativo</option>
-          <option value="pausa">Em pausa</option>
-        </select>
+
+        <div className="client-form-section">
+          <div className="client-form-section-title">Informações da consulta</div>
+          <label>
+            Valor por consulta (R$)
+            <input
+              type="number"
+              value={form.value}
+              onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
+              required
+            />
+          </label>
+          <label>
+            Duração personalizada (min)
+            <input
+              placeholder={`Padrão: ${defaultSessionDuration} min`}
+              type="number"
+              value={form.sessionDuration}
+              onChange={(e) => setForm({ ...form, sessionDuration: e.target.value })}
+            />
+            <span className="client-form-section-hint">
+              Deixe em branco para usar os {defaultSessionDuration} min padrão definidos em Configurações.
+            </span>
+          </label>
+          <label>
+            Frequência das sessões
+            <select value={form.frequency} onChange={(e) => setForm({ ...form, frequency: e.target.value })}>
+              <option value="Semanal">Semanal</option>
+              <option value="Quinzenal">Quinzenal</option>
+              <option value="Mensal">Mensal</option>
+              <option value="Pausada">Pausada</option>
+            </select>
+          </label>
+          <label>
+            Status do cliente
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+              <option value="ativo">Ativo</option>
+              <option value="pausa">Em pausa</option>
+            </select>
+          </label>
+        </div>
+
         <textarea
           placeholder="Observações"
           value={form.notes}
@@ -362,19 +383,32 @@ export default function ClientesPage() {
               onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
             />
           </label>
-          <input
-            placeholder="Valor por consulta"
-            type="number"
-            value={form.value}
-            onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
-            required
-          />
-          <input
-            placeholder="Duração personalizada (min)"
-            type="number"
-            value={form.sessionDuration}
-            onChange={(e) => setForm({ ...form, sessionDuration: e.target.value })}
-          />
+
+          <div className="client-form-section">
+            <div className="client-form-section-title">Informações da consulta</div>
+            <label>
+              Valor por consulta (R$)
+              <input
+                type="number"
+                value={form.value}
+                onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
+                required
+              />
+            </label>
+            <label>
+              Duração personalizada (min)
+              <input
+                placeholder={`Padrão: ${defaultSessionDuration} min`}
+                type="number"
+                value={form.sessionDuration}
+                onChange={(e) => setForm({ ...form, sessionDuration: e.target.value })}
+              />
+              <span className="client-form-section-hint">
+                Deixe em branco para usar os {defaultSessionDuration} min padrão definidos em Configurações.
+              </span>
+            </label>
+          </div>
+
           <button type="submit">Salvar</button>
         </form>
       )}
