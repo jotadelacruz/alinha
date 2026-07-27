@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { isoDate } from '../lib/dateUtils';
+import { birthdayMessage, whatsappLink } from '../lib/whatsapp';
 
 const TODAY = new Date();
 const TODAY_ISO = isoDate(TODAY);
@@ -58,6 +59,11 @@ export default function ResumoPage() {
 
   const todayAppointments = [...appointments].sort((a, b) => a.time.localeCompare(b.time));
   const todayBills = bills.filter((b) => b.dueDate === TODAY_ISO);
+  const todayBirthdays = clients.filter((c) => {
+    if (!c.birthDate) return false;
+    const [, month, day] = c.birthDate.split('-').map(Number);
+    return month === TODAY.getMonth() + 1 && day === TODAY.getDate();
+  });
   const faturamentoHoje = todayAppointments.reduce((sum, a) => {
     const client = clientById(a.clientId);
     return sum + (client ? client.value : 0);
@@ -101,6 +107,28 @@ export default function ResumoPage() {
             <div key={a.id} className="appt-row">
               <strong>{a.time}</strong> — {client ? client.name : 'Cliente removido'} ·{' '}
               {a.status === 'pending' ? 'A confirmar' : 'Confirmada'} · {a.modality}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+        <h3 style={{ marginBottom: 12 }}>Aniversariantes de hoje</h3>
+        {todayBirthdays.length === 0 && (
+          <p style={{ color: 'var(--ink-soft)', fontSize: 13.5 }}>Nenhum aniversariante hoje.</p>
+        )}
+        {todayBirthdays.map((c) => {
+          const age = TODAY.getFullYear() - Number(c.birthDate.split('-')[0]);
+          return (
+            <div key={c.id} className="appt-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>
+                🎂 {c.name} — completa {age} anos
+              </span>
+              {c.phone && (
+                <a href={whatsappLink(c.phone, birthdayMessage(c.name))} target="_blank" rel="noopener noreferrer">
+                  Parabenizar
+                </a>
+              )}
             </div>
           );
         })}

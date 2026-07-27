@@ -15,6 +15,11 @@ export function confirmationMessage(clientName, dateIso, time) {
   return `Olá ${firstName}! Passando para confirmar sua consulta no dia ${formatBR(dateIso)} às ${time}. Pode confirmar presença?`;
 }
 
+export function birthdayMessage(clientName) {
+  const firstName = (clientName || '').split(' ')[0];
+  return `Feliz aniversário, ${firstName}! Desejo um dia repleto de alegria. 🎉`;
+}
+
 const MONTH_NAMES = [
   'janeiro',
   'fevereiro',
