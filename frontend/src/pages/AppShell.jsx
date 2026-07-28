@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import markCream from '../assets/brand/mark-cream.png';
 import markInk from '../assets/brand/mark-ink.png';
@@ -104,6 +105,7 @@ const ADMIN_NAV_ITEM = {
 export default function AppShell() {
   const { signOut } = useAuth();
   const { profile, suspendedMessage } = useProfile();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   if (suspendedMessage) {
     return (
@@ -121,7 +123,25 @@ export default function AppShell() {
 
   return (
     <div className="app">
-      <aside className="sidebar">
+      <header className="mobile-topbar">
+        <button
+          type="button"
+          className="mobile-topbar-menu-btn"
+          aria-label="Abrir menu"
+          onClick={() => setDrawerOpen(true)}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M3 6h18M3 12h18M3 18h18" />
+          </svg>
+        </button>
+        <img src={markInk} alt="Alinha" className="brand-mark-plain brand-mark-plain-light" />
+        <img src={markCream} alt="Alinha" className="brand-mark-plain brand-mark-plain-dark" />
+        <span className="brand-name">Alinha</span>
+      </header>
+
+      {drawerOpen && <div className="sidebar-backdrop" onClick={() => setDrawerOpen(false)} />}
+
+      <aside className={`sidebar ${drawerOpen ? 'open' : ''}`}>
         <div className="brand">
           <img src={markInk} alt="Alinha" className="brand-mark-plain brand-mark-plain-light" />
           <img src={markCream} alt="Alinha" className="brand-mark-plain brand-mark-plain-dark" />
@@ -133,7 +153,7 @@ export default function AppShell() {
 
         <nav className="app-nav">
           {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end}>
+            <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setDrawerOpen(false)}>
               {item.icon}
               {item.label}
             </NavLink>
