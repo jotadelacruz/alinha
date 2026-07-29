@@ -3,6 +3,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { ALL_WEEK_DAYS } from '../lib/dateUtils';
+import { formatCEP, formatCNPJ, lookupCep } from '../lib/masks';
 import { applyColorTheme, applyTheme } from '../lib/theme';
 
 const COLOR_THEMES = [
@@ -209,6 +210,7 @@ export default function ConfiguracoesPage() {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const [tab, setTab] = useState('perfil');
+  const [cepStatus, setCepStatus] = useState('idle'); // 'idle' | 'loading' | 'notfound'
   const photoInputRef = useRef(null);
   const logoInputRef = useRef(null);
 
@@ -231,6 +233,8 @@ export default function ConfiguracoesPage() {
       notifWeekly: profile.settings.notifications.weekly,
       officeAddress: profile.settings.office.address,
       officeCep: profile.settings.office.cep,
+      officeNumber: profile.settings.office.number,
+      officeComplement: profile.settings.office.complement,
       cnpj: profile.settings.office.cnpj,
       defaultSessionValue: profile.settings.office.defaultValue,
       pixKey: profile.settings.office.pix,
@@ -259,6 +263,31 @@ export default function ConfiguracoesPage() {
     } catch (err) {
       setError(err.message);
     }
+  }
+
+  async function handleCepChange(e) {
+    const formatted = formatCEP(e.target.value);
+    setForm((f) => ({ ...f, officeCep: formatted }));
+
+    const digits = formatted.replace(/\D/g, '');
+    if (digits.length !== 8) {
+      setCepStatus('idle');
+      return;
+    }
+
+    setCepStatus('loading');
+    const result = await lookupCep(formatted);
+    if (!result) {
+      setCepStatus('notfound');
+      return;
+    }
+    setCepStatus('idle');
+    setForm((f) => ({
+      ...f,
+      officeAddress: [result.logradouro, result.bairro, `${result.localidade}/${result.uf}`]
+        .filter(Boolean)
+        .join(', '),
+    }));
   }
 
   async function handleLogoChange(e) {
@@ -513,28 +542,52 @@ export default function ConfiguracoesPage() {
             {tab === 'consultorio' && (
               <section>
                 <h3>Consultório</h3>
+                <label>
+                  CEP
+                  <input value={form.officeCep} onChange={handleCepChange} placeholder="00000-000" />
+                  {cepStatus === 'loading' && (
+                    <span className="client-form-section-hint">Buscando endereço…</span>
+                  )}
+                  {cepStatus === 'notfound' && (
+                    <span className="client-form-section-hint">CEP não encontrado — preencha o endereço manualmente.</span>
+                  )}
+                </label>
                 <input
                   value={form.officeAddress}
                   onChange={(e) => setForm({ ...form, officeAddress: e.target.value })}
-                  placeholder="Endereço"
+                  placeholder="Endereço (rua, bairro, cidade/UF)"
                 />
                 <input
-                  value={form.officeCep}
-                  onChange={(e) => setForm({ ...form, officeCep: e.target.value })}
-                  placeholder="CEP"
+                  value={form.officeNumber}
+                  onChange={(e) => setForm({ ...form, officeNumber: e.target.value })}
+                  placeholder="Número"
+                />
+                <input
+                  value={form.officeComplement}
+                  onChange={(e) => setForm({ ...form, officeComplement: e.target.value })}
+                  placeholder="Complemento (sala, andar, bloco)"
                 />
                 <input
                   value={form.cnpj}
-                  onChange={(e) => setForm({ ...form, cnpj: e.target.value })}
-                  placeholder="CNPJ"
+                  onChange={(e) => setForm({ ...form, cnpj: formatCNPJ(e.target.value) })}
+                  placeholder="00.000.000/0000-00"
                 />
-                <input
-                  type="number"
-                  value={form.defaultSessionValue}
-                  onChange={(e) => setForm({ ...form, defaultSessionValue: Number(e.target.value) })}
-                  placeholder="Valor padrão das consultas"
-                />
-                <input value={form.pixKey} onChange={(e) => setForm({ ...form, pixKey: e.target.value })} placeholder="Chave PIX" />
+
+                <div className="client-form-section">
+                  <div className="client-form-section-title">Valor da consulta e recebimento</div>
+                  <label>
+                    Valor padrão das consultas (R$)
+                    <input
+                      type="number"
+                      value={form.defaultSessionValue}
+                      onChange={(e) => setForm({ ...form, defaultSessionValue: Number(e.target.value) })}
+                    />
+                  </label>
+                  <label>
+                    Chave PIX
+                    <input value={form.pixKey} onChange={(e) => setForm({ ...form, pixKey: e.target.value })} />
+                  </label>
+                </div>
               </section>
             )}
 
