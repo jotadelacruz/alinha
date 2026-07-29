@@ -34,6 +34,8 @@ class NotificationSettings(CamelModel):
 class OfficeSettings(CamelModel):
     address: str
     cep: str
+    number: str
+    complement: str
     cnpj: str
     default_value: float
     pix: str
@@ -83,6 +85,8 @@ class ProfileUpdate(CamelModel):
     notif_weekly: bool | None = None
     office_address: str | None = None
     office_cep: str | None = None
+    office_number: str | None = None
+    office_complement: str | None = None
     cnpj: str | None = None
     default_session_value: float | None = None
     pix_key: str | None = None

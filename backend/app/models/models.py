@@ -38,6 +38,8 @@ class Profile(Base):
     notif_weekly: Mapped[bool] = mapped_column(Boolean, default=False)
     office_address: Mapped[str | None] = mapped_column(Text, default="")
     office_cep: Mapped[str | None] = mapped_column(Text, nullable=True)
+    office_number: Mapped[str | None] = mapped_column(Text, default="")
+    office_complement: Mapped[str | None] = mapped_column(Text, default="")
     cnpj: Mapped[str | None] = mapped_column(Text, nullable=True)
     default_session_value: Mapped[float] = mapped_column(Numeric, default=210)
     pix_key: Mapped[str | None] = mapped_column(Text, default="")
