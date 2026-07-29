@@ -17,7 +17,6 @@ const TABS = [
   { key: 'perfil', label: 'Perfil' },
   { key: 'aparencia', label: 'Aparência' },
   { key: 'agenda', label: 'Agenda' },
-  { key: 'notificacoes', label: 'Notificações' },
   { key: 'consultorio', label: 'Consultório' },
   { key: 'preferencias', label: 'Preferências' },
   { key: 'mensagens', label: 'Modelos de mensagem' },
@@ -227,10 +226,6 @@ export default function ConfiguracoesPage() {
       workEnd: profile.settings.agenda.workEnd,
       sessionDuration: profile.settings.agenda.sessionDuration,
       workDays: profile.settings.agenda.workDays,
-      notifSession: profile.settings.notifications.session,
-      notifPayment: profile.settings.notifications.payment,
-      notifBills: profile.settings.notifications.bills,
-      notifWeekly: profile.settings.notifications.weekly,
       officeAddress: profile.settings.office.address,
       officeCep: profile.settings.office.cep,
       officeNumber: profile.settings.office.number,
@@ -498,44 +493,6 @@ export default function ConfiguracoesPage() {
                     })}
                   </div>
                 </div>
-              </section>
-            )}
-
-            {tab === 'notificacoes' && (
-              <section>
-                <h3>Notificações</h3>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={form.notifSession}
-                    onChange={(e) => setForm({ ...form, notifSession: e.target.checked })}
-                  />
-                  Lembretes de sessão
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={form.notifPayment}
-                    onChange={(e) => setForm({ ...form, notifPayment: e.target.checked })}
-                  />
-                  Pagamentos pendentes
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={form.notifBills}
-                    onChange={(e) => setForm({ ...form, notifBills: e.target.checked })}
-                  />
-                  Contas a pagar
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={form.notifWeekly}
-                    onChange={(e) => setForm({ ...form, notifWeekly: e.target.checked })}
-                  />
-                  Resumo semanal
-                </label>
               </section>
             )}
 
