@@ -17,6 +17,9 @@
   --white: #ffffff;
   --radius: 14px;
   --shadow: 0 1px 2px rgba(28, 36, 51, 0.04), 0 4px 16px rgba(28, 36, 51, 0.06);
+  --sidebar-bg: var(--white);
+  --sidebar-ink: var(--ink);
+  --sidebar-ink-soft: var(--ink-soft);
 }
 
 [data-theme='dark'] {
@@ -37,6 +40,9 @@
   --line: #2c323d;
   --white: #1c212a;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --sidebar-bg: var(--white);
+  --sidebar-ink: var(--ink);
+  --sidebar-ink-soft: var(--ink-soft);
 }
 
 /* Tema de cor "Verde-Musgo" (paleta do MIV Alinha) — sobrescreve o acento --navy usado em toda a aplicação. */
@@ -52,6 +58,41 @@
   --navy-light: #9fc7b8;
   --navy-dark: #4a6f63;
   --navy-wash: #1f2e29;
+}
+
+/* Tema "Marca" — visual alinhado à landing page: menu lateral escuro fixo,
+   conteúdo off-white e tipografia serifada nos títulos. Independente da
+   escolha de "Cor do tema" (azul/verde), que não se aplica aqui. */
+[data-theme='brand'] {
+  --paper: #f0ede6;
+  --paper-soft: #e7e2d4;
+  --ink: #1c1b1a;
+  --ink-soft: #6b665f;
+  --navy: #1e4b43;
+  --navy-light: #4faf97;
+  --navy-dark: #163a34;
+  --navy-wash: #dfe9e5;
+  --sage: #4faf97;
+  --sage-wash: #dfe9e5;
+  --line: #ded8c9;
+  --white: #ffffff;
+  --shadow: 0 1px 2px rgba(28, 27, 26, 0.05), 0 4px 16px rgba(28, 27, 26, 0.06);
+  --sidebar-bg: #1c1b1a;
+  --sidebar-ink: #f0ede6;
+  --sidebar-ink-soft: #a39c8d;
+}
+
+[data-theme='brand'] h1,
+[data-theme='brand'] h2,
+[data-theme='brand'] h3,
+[data-theme='brand'] .display {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+[data-theme='brand'] button {
+  border-radius: 999px;
 }
 
 body {
@@ -107,7 +148,7 @@ a {
 .sidebar {
   width: 240px;
   flex-shrink: 0;
-  background: var(--white);
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--line);
   padding: 28px 20px;
   display: flex;
@@ -159,10 +200,22 @@ a {
   display: block;
 }
 
+[data-theme='brand'] .sidebar .brand-mark-plain-light {
+  display: none;
+}
+
+[data-theme='brand'] .sidebar .brand-mark-plain-dark {
+  display: block;
+}
+
 .brand-name {
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 18px;
+}
+
+.sidebar .brand-name {
+  color: var(--sidebar-ink);
 }
 
 .brand-sub {
@@ -171,6 +224,10 @@ a {
   margin-top: 1px;
   line-height: 1.3;
   max-width: 150px;
+}
+
+.sidebar .brand-sub {
+  color: var(--sidebar-ink-soft);
 }
 
 nav.app-nav {
@@ -186,7 +243,7 @@ nav.app-nav a {
   gap: 11px;
   padding: 10px 12px;
   border-radius: 10px;
-  color: var(--ink-soft);
+  color: var(--sidebar-ink-soft);
   font-size: 14.5px;
   font-weight: 600;
   text-decoration: none;
@@ -195,12 +252,21 @@ nav.app-nav a {
 
 nav.app-nav a:hover {
   background: var(--paper-soft);
-  color: var(--ink);
+  color: var(--sidebar-ink);
 }
 
 nav.app-nav a.active {
   background: var(--navy-wash);
   color: var(--navy);
+}
+
+[data-theme='brand'] nav.app-nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='brand'] nav.app-nav a.active {
+  background: var(--navy);
+  color: #fff;
 }
 
 nav.app-nav a svg {
@@ -223,6 +289,17 @@ nav.app-nav a.active svg {
   padding-top: 18px;
 }
 
+.sidebar-footer-name {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--sidebar-ink);
+}
+
+.sidebar-footer-role {
+  font-size: 11.5px;
+  color: var(--sidebar-ink-soft);
+}
+
 .sidebar-logout-btn {
   display: flex;
   align-items: center;
@@ -234,12 +311,17 @@ nav.app-nav a.active svg {
   background: none;
   border: none;
   border-radius: 8px;
-  color: var(--ink-soft);
+  color: var(--sidebar-ink-soft);
 }
 
 .sidebar-logout-btn:hover {
   background: var(--paper-soft);
   color: var(--alert);
+}
+
+[data-theme='brand'] .sidebar-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e08a6c;
 }
 
 .sidebar-logout-btn svg {

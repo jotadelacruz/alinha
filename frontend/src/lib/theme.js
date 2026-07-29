@@ -1,5 +1,11 @@
 export function applyTheme(theme) {
   const root = document.documentElement;
+
+  if (theme === 'brand') {
+    root.setAttribute('data-theme', 'brand');
+    return;
+  }
+
   const resolved =
     theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
 

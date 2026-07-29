@@ -393,25 +393,35 @@ export default function ConfiguracoesPage() {
                   <option value="light">Claro</option>
                   <option value="dark">Escuro</option>
                   <option value="system">Sistema</option>
+                  <option value="brand">Marca</option>
                 </select>
 
-                <label style={{ display: 'block', marginTop: 16, marginBottom: 8 }}>Cor do tema</label>
-                <div className="color-theme-grid">
-                  {COLOR_THEMES.map((ct) => (
-                    <button
-                      key={ct.key}
-                      type="button"
-                      className={`color-theme-chip ${form.colorTheme === ct.key ? 'active' : ''}`}
-                      onClick={() => {
-                        setForm({ ...form, colorTheme: ct.key });
-                        applyColorTheme(ct.key);
-                      }}
-                    >
-                      <span className="color-theme-swatch" style={{ background: ct.swatch }} />
-                      {ct.label}
-                    </button>
-                  ))}
-                </div>
+                {form.theme === 'brand' ? (
+                  <p style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 16 }}>
+                    O modo Marca tem uma paleta própria (menu lateral escuro, verde-musgo) — a escolha de cor abaixo
+                    não se aplica a ele.
+                  </p>
+                ) : (
+                  <>
+                    <label style={{ display: 'block', marginTop: 16, marginBottom: 8 }}>Cor do tema</label>
+                    <div className="color-theme-grid">
+                      {COLOR_THEMES.map((ct) => (
+                        <button
+                          key={ct.key}
+                          type="button"
+                          className={`color-theme-chip ${form.colorTheme === ct.key ? 'active' : ''}`}
+                          onClick={() => {
+                            setForm({ ...form, colorTheme: ct.key });
+                            applyColorTheme(ct.key);
+                          }}
+                        >
+                          <span className="color-theme-swatch" style={{ background: ct.swatch }} />
+                          {ct.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </section>
             )}
 
