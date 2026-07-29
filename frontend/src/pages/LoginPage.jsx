@@ -40,10 +40,14 @@ export default function LoginPage() {
     setError('');
     setInfo('');
     setLoading(true);
-    const { error } =
+    const { data, error } =
       mode === 'login' ? await signInWithEmail(email, password) : await signUpWithEmail(email, password, name);
     setLoading(false);
-    if (error) setError(translateAuthError(error.message));
+    if (error) {
+      setError(translateAuthError(error.message));
+    } else if (mode === 'signup' && !data?.session) {
+      setInfo('Cadastro criado! Verifique seu e-mail para confirmar antes de entrar.');
+    }
   }
 
   async function handleForgotPassword(e) {
@@ -119,6 +123,7 @@ export default function LoginPage() {
         />
 
         {error && <p className="auth-error">{error}</p>}
+        {info && <p className="auth-info">{info}</p>}
 
         <button type="submit" disabled={loading}>
           {mode === 'login' ? 'Entrar' : 'Criar conta'}
@@ -139,7 +144,15 @@ export default function LoginPage() {
             Esqueci minha senha
           </button>
         )}
-        <button type="button" className="link" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
+        <button
+          type="button"
+          className="link"
+          onClick={() => {
+            setMode(mode === 'login' ? 'signup' : 'login');
+            setError('');
+            setInfo('');
+          }}
+        >
           {mode === 'login' ? 'Ainda não tem conta? Criar' : 'Já tem conta? Entrar'}
         </button>
       </form>
