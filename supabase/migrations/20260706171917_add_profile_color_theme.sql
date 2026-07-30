@@ -1,0 +1,8 @@
+-- No-op de reconciliacao (2026-07-29): esta versao ja esta registrada como
+-- aplicada em producao (schema_migrations, nome "add_profile_color_theme"),
+-- de antes do inicio do versionamento de migrations deste projeto. O DDL real
+-- desta mudanca esta consolidado em 00000000000000_baseline_schema.sql
+-- (reconstrucao do schema de producao feita em 2026-07-14). Este arquivo
+-- existe só pra dar paridade de versao com o historico real de producao,
+-- permitindo que `supabase db push` funcione sem tentar reexecutar DDL ja
+-- aplicado. Nao contem SQL executavel de proposito.

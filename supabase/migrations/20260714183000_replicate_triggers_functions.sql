@@ -2,6 +2,16 @@
 -- histórico de migrations, como o resto da baseline). Propositalmente traz os
 -- mesmos WARNs que o advisor de segurança aponta em produção — a correção vem
 -- na migration seguinte, pra podermos validar o diff antes/depois localmente.
+--
+-- AVISO OBRIGATÓRIO: NUNCA rode este arquivo diretamente contra produção
+-- (psql, `supabase db query -f`, etc.). Ele recria handle_new_user() no
+-- estado ANTERIOR ao hardening (sem search_path, sem REVOKE) — rodá-lo contra
+-- produção desfaria silenciosamente as correções já aplicadas em
+-- 20260714191010_fix_security_advisor_warnings.sql e
+-- 20260714191303_revoke_handle_new_user_from_client_roles.sql. Sua versão
+-- (20260714183000) é marcada "applied" via `supabase migration repair`
+-- justamente pra impedir que `supabase db push` o execute — isso não protege
+-- contra execução manual.
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
  RETURNS trigger
