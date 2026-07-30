@@ -51,6 +51,9 @@ def _to_profile_out(p: Profile) -> ProfileOut:
             "has_prontuario_password": bool(p.prontuario_password_hash),
             "certificate_logo_url": p.certificate_logo_url,
             "package_alert_threshold": p.package_alert_threshold if p.package_alert_threshold is not None else 2,
+            "unpaid_sessions_block_threshold": (
+                p.unpaid_sessions_block_threshold if p.unpaid_sessions_block_threshold is not None else 3
+            ),
         },
     )
 

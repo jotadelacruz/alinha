@@ -57,6 +57,7 @@ class ProfileSettings(CamelModel):
     has_prontuario_password: bool
     certificate_logo_url: str | None
     package_alert_threshold: int
+    unpaid_sessions_block_threshold: int
 
 
 class ProfileOut(CamelModel):
@@ -95,6 +96,7 @@ class ProfileUpdate(CamelModel):
     message_template_package: str | None = None
     certificate_logo_url: str | None = None
     package_alert_threshold: int | None = None
+    unpaid_sessions_block_threshold: int | None = None
 
 
 class ProntuarioPasswordIn(CamelModel):

@@ -237,6 +237,7 @@ export default function ConfiguracoesPage() {
       messageTemplateConfirmation: profile.settings.messageTemplates.confirmation,
       messageTemplatePackage: profile.settings.messageTemplates.package,
       packageAlertThreshold: profile.settings.packageAlertThreshold,
+      unpaidSessionsBlockThreshold: profile.settings.unpaidSessionsBlockThreshold,
       certificateLogoUrl: profile.settings.certificateLogoUrl,
     });
   }, [profile]);
@@ -558,6 +559,19 @@ export default function ConfiguracoesPage() {
                     value={form.packageAlertThreshold}
                     onChange={(e) => setForm({ ...form, packageAlertThreshold: Number(e.target.value) })}
                   />
+                </label>
+                <label>
+                  Bloquear agendamento com mais de X sessões sem pagar
+                  <input
+                    type="number"
+                    min={1}
+                    value={form.unpaidSessionsBlockThreshold}
+                    onChange={(e) => setForm({ ...form, unpaidSessionsBlockThreshold: Number(e.target.value) })}
+                  />
+                  <span className="client-form-section-hint">
+                    Quando um cliente atingir esse número de sessões sem pagamento no mês, o sistema impede novos
+                    agendamentos para ele até o pagamento ser regularizado em Financeiro.
+                  </span>
                 </label>
               </section>
             )}

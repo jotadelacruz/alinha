@@ -6,9 +6,9 @@ import uuid
 
 from sqlalchemy.orm import Session
 
-from app.models.models import Client, ClientCredit, Payment, PaymentTransaction
+from app.models.models import Client, ClientCredit, Payment, PaymentTransaction, Profile
 
-BLOCK_THRESHOLD_SESSIONS = 3
+BLOCK_THRESHOLD_SESSIONS = 3  # fallback quando o perfil não tem preferência salva (ver Profile.unpaid_sessions_block_threshold)
 
 
 def _unpaid_sessions(sessions: int, received_total: float, session_value: float) -> int:
@@ -17,6 +17,13 @@ def _unpaid_sessions(sessions: int, received_total: float, session_value: float)
         return 0
     paid_sessions = math.floor(received_total / session_value + 1e-9)
     return max(0, sessions - paid_sessions)
+
+
+def _block_threshold(db: Session, owner_id: uuid.UUID) -> int:
+    profile = db.query(Profile).filter(Profile.id == owner_id).first()
+    if profile is None or profile.unpaid_sessions_block_threshold is None:
+        return BLOCK_THRESHOLD_SESSIONS
+    return profile.unpaid_sessions_block_threshold
 
 
 def compute_client_finance(db: Session, owner_id: uuid.UUID, client_id: uuid.UUID, month_iso: datetime.date) -> dict:
@@ -70,7 +77,7 @@ def compute_client_finance(db: Session, owner_id: uuid.UUID, client_id: uuid.UUI
         "balance": saldo,
         "status": status,
         "unpaid_sessions": unpaid_sessions,
-        "blocked": unpaid_sessions >= BLOCK_THRESHOLD_SESSIONS,
+        "blocked": unpaid_sessions >= _block_threshold(db, owner_id),
     }
 
 
@@ -85,6 +92,7 @@ def compute_all_clients_finance(db: Session, owner_id: uuid.UUID, month_iso: dat
         .all()
     )
     credits = db.query(ClientCredit).filter(ClientCredit.owner_id == owner_id).all()
+    threshold = _block_threshold(db, owner_id)
 
     payment_by_client = {p.client_id: p for p in payments}
     recebido_direto_by_client: dict[uuid.UUID, float] = {}
@@ -127,7 +135,7 @@ def compute_all_clients_finance(db: Session, owner_id: uuid.UUID, month_iso: dat
             "balance": saldo,
             "status": status,
             "unpaid_sessions": unpaid_sessions,
-            "blocked": unpaid_sessions >= BLOCK_THRESHOLD_SESSIONS,
+            "blocked": unpaid_sessions >= threshold,
         }
     return result
 

@@ -184,6 +184,44 @@ def test_client_blocked_after_three_unpaid_sessions():
     assert resp.status_code == 200, resp.text
 
 
+def test_unpaid_sessions_block_threshold_is_configurable():
+    resp = client.patch("/profile", json={"unpaidSessionsBlockThreshold": 1})
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["settings"]["unpaidSessionsBlockThreshold"] == 1
+
+    try:
+        resp = client.post(
+            "/clients",
+            json={"name": "Cliente Limite Baixo", "value": 150, "day": "-", "time": "-", "status": "ativo"},
+        )
+        client_id = resp.json()["id"]
+
+        month_iso = datetime.date.today().replace(day=1).isoformat()
+        client.put(
+            "/payments",
+            json={"clientId": client_id, "referenceMonthIso": month_iso, "sessions": 1, "status": "aberto"},
+        )
+
+        fin = client.get(f"/finance/client/{client_id}", params={"month_iso": month_iso}).json()
+        assert fin["unpaidSessions"] == 1
+        assert fin["blocked"] is True
+
+        resp = client.post(
+            "/appointments",
+            json={
+                "clientId": client_id,
+                "dateIso": datetime.date.today().isoformat(),
+                "time": "10:00",
+                "modality": "Presencial",
+                "status": "confirmed",
+            },
+        )
+        assert resp.status_code == 403, resp.text
+    finally:
+        resp = client.patch("/profile", json={"unpaidSessionsBlockThreshold": 3})
+        assert resp.status_code == 200, resp.text
+
+
 def test_finance_summary_returns_camel_case():
     resp = client.get("/finance/summary", params={"month_iso": datetime.date.today().replace(day=1).isoformat()})
     assert resp.status_code == 200, resp.text
