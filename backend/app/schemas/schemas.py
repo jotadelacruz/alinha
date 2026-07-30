@@ -3,8 +3,9 @@ que `frontend-legacy/js/data.js` já usava (minimiza mudança do lado do fronten
 
 import datetime
 import uuid
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 def to_camel(snake: str) -> str:
@@ -349,4 +350,18 @@ class BillingSubscribeIn(CamelModel):
 
 
 class BillingSubscribeOut(CamelModel):
+    invoice_url: str
+
+
+class SignupSubscribeIn(CamelModel):
+    name: str
+    email: str
+    password: str = Field(min_length=6)
+    cpf_cnpj: str
+    billing_type: Literal["PIX", "BOLETO", "CREDIT_CARD"]
+    phone: str | None = None
+    honeypot: str = ""  # campo escondido no formulário; se vier preenchido, é bot
+
+
+class SignupSubscribeOut(CamelModel):
     invoice_url: str

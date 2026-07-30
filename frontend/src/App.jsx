@@ -5,6 +5,7 @@ import { SessionTimerProvider } from './context/SessionTimerContext'
 import AdminPage from './pages/AdminPage'
 import AgendaPage from './pages/AgendaPage'
 import AppShell from './pages/AppShell'
+import AssinarPage from './pages/AssinarPage'
 import AssinaturaPage from './pages/AssinaturaPage'
 import AtestadosPage from './pages/AtestadosPage'
 import ClientesPage from './pages/ClientesPage'
@@ -23,6 +24,7 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/assinar" element={<AssinarPage />} />
       <Route
         path="/assinatura"
         element={

@@ -1802,6 +1802,19 @@ textarea {
   max-width: 480px;
 }
 
+.landing-price {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--brand-moss);
+  margin-top: -16px;
+}
+
+.landing-price span {
+  font-weight: 400;
+  font-size: 14.5px;
+  color: #4a4744;
+}
+
 .landing-badge {
   display: inline-block;
   padding: 6px 14px;

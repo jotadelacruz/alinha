@@ -17,8 +17,8 @@ async function authHeader() {
   return { Authorization: `Bearer ${token}` };
 }
 
-async function request(path, { method = 'GET', body, params } = {}) {
-  const headers = await authHeader();
+async function request(path, { method = 'GET', body, params, skipAuth = false } = {}) {
+  const headers = skipAuth ? {} : await authHeader();
   let url = `${API_URL}${path}`;
   if (params) {
     const query = new URLSearchParams(
@@ -52,6 +52,10 @@ export const api = {
   put: (path, body) => request(path, { method: 'PUT', body }),
   patch: (path, body) => request(path, { method: 'PATCH', body }),
   delete: (path, params) => request(path, { method: 'DELETE', params }),
+};
+
+export const apiPublic = {
+  post: (path, body) => request(path, { method: 'POST', body, skipAuth: true }),
 };
 
 export { ApiError };

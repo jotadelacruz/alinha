@@ -73,10 +73,14 @@ const FEATURES = [
   },
 ];
 
+// Preço fixo aqui — o valor cobrado de verdade é settings.asaas_plan_price no
+// backend (backend/app/core/config.py); atualize os dois lugares se mudar.
+const PLAN_PRICE_LABEL = 'R$ 98,90/mês';
+
 const STEPS = [
   {
-    title: 'Crie sua conta',
-    description: 'Cadastro leva menos de 5 minutos. Sem cartão de crédito, sem pegadinha.',
+    title: 'Assine em poucos minutos',
+    description: '14 dias grátis pra testar — a cobrança só começa depois disso.',
   },
   {
     title: 'Organize agenda e clientes',
@@ -120,8 +124,11 @@ export default function LandingPage() {
               Agenda, prontuário, financeiro e atestado no mesmo lugar. Menos aba aberta, menos post-it — mais
               tempo pra quem realmente importa: seu paciente.
             </p>
+            <p className="landing-price">
+              {PLAN_PRICE_LABEL} <span>· 14 dias grátis pra testar</span>
+            </p>
             <div className="landing-hero-actions">
-              <Link to="/login" className="landing-cta-btn">
+              <Link to="/assinar" className="landing-cta-btn">
                 Começar agora
               </Link>
               <a
@@ -182,9 +189,11 @@ export default function LandingPage() {
 
         <section className="landing-final-cta">
           <h2>Chega de planilha. Comece agora.</h2>
-          <p>Sem cartão de crédito, sem custo pra testar.</p>
+          <p>
+            {PLAN_PRICE_LABEL} · 14 dias grátis pra testar, a cobrança só começa depois disso.
+          </p>
           <div className="landing-hero-actions" style={{ justifyContent: 'center' }}>
-            <Link to="/login" className="landing-cta-btn landing-cta-inverse">
+            <Link to="/assinar" className="landing-cta-btn landing-cta-inverse">
               Começar agora
             </Link>
             <a

@@ -1,15 +1,23 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user_id_unchecked
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.rate_limit import check_rate_limit
+from app.core.validators import is_valid_cpf_cnpj
 from app.models.models import Profile
-from app.schemas.schemas import BillingStatusOut, BillingSubscribeIn, BillingSubscribeOut
-from app.services import billing_service
+from app.schemas.schemas import (
+    BillingStatusOut,
+    BillingSubscribeIn,
+    BillingSubscribeOut,
+    SignupSubscribeIn,
+    SignupSubscribeOut,
+)
+from app.services import billing_service, supabase_admin_service
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
@@ -45,11 +53,52 @@ def subscribe(
 
     try:
         customer_id = billing_service.create_or_reuse_customer(profile, email, body.name, body.cpf_cnpj, body.phone)
+        db.commit()
         invoice_url = billing_service.create_subscription(profile, customer_id, body.billing_type)
+        db.commit()
     except billing_service.AsaasNotConfigured:
         raise HTTPException(503, "Cobrança ainda não configurada, tente novamente mais tarde")
-    db.commit()
     return BillingSubscribeOut(invoice_url=invoice_url)
+
+
+@router.post("/signup-and-subscribe", response_model=SignupSubscribeOut, response_model_by_alias=True)
+def signup_and_subscribe(body: SignupSubscribeIn, request: Request, db: Session = Depends(get_db)):
+    """Endpoint público (sem login) usado pelo cadastro combinado da landing page
+    (/assinar): cria a conta Supabase já confirmada e a assinatura na Asaas num
+    passo só. Não desfaz a conta Supabase se a parte da Asaas falhar depois —
+    a pessoa continua com uma conta de trial normal, que pode assinar depois
+    pela tela de Configurações."""
+    if body.honeypot:
+        raise HTTPException(400, "Requisição inválida")
+    if not is_valid_cpf_cnpj(body.cpf_cnpj):
+        raise HTTPException(422, "CPF/CNPJ inválido")
+    check_rate_limit(request.client.host if request.client else "unknown")
+
+    try:
+        user_id = supabase_admin_service.create_confirmed_supabase_user(body.email, body.password, body.name)
+    except supabase_admin_service.SupabaseAdminNotConfigured:
+        raise HTTPException(503, "Cadastro ainda não configurado, tente novamente mais tarde")
+    except supabase_admin_service.SupabaseSignupError as exc:
+        raise HTTPException(exc.status_code, str(exc))
+
+    profile = billing_service.wait_for_profile(db, user_id)
+    if profile is None:
+        raise HTTPException(
+            500,
+            "Conta criada, mas houve um problema ao configurar a assinatura. "
+            "Faça login e assine pela página de Configurações.",
+        )
+
+    try:
+        customer_id = billing_service.create_or_reuse_customer(
+            profile, body.email, body.name, body.cpf_cnpj, body.phone
+        )
+        db.commit()
+        invoice_url = billing_service.create_subscription(profile, customer_id, body.billing_type)
+        db.commit()
+    except billing_service.AsaasNotConfigured:
+        raise HTTPException(503, "Cobrança ainda não configurada, tente novamente mais tarde")
+    return SignupSubscribeOut(invoice_url=invoice_url)
 
 
 @router.post("/webhook/asaas")

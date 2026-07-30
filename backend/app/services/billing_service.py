@@ -8,6 +8,7 @@ além do painel admin que já existia.
 
 import datetime
 import hmac
+import time
 import uuid
 
 import httpx
@@ -48,6 +49,22 @@ def sync_trial_status(
         db.commit()
         return "suspended"
     return account_status
+
+
+def wait_for_profile(
+    db: Session, user_id: uuid.UUID, attempts: int = 3, delay_seconds: float = 0.1
+) -> Profile | None:
+    """handle_new_user() roda síncrono na mesma transação em que a Admin API do
+    Supabase cria o usuário — na prática já deveria estar visível de cara. O
+    retry é só seguro extra pro cadastro combinado (/billing/signup-and-subscribe),
+    que cria o usuário e precisa do Profile logo em seguida, na mesma request."""
+    for i in range(attempts):
+        profile = db.query(Profile).filter(Profile.id == user_id).first()
+        if profile is not None:
+            return profile
+        if i < attempts - 1:
+            time.sleep(delay_seconds)
+    return None
 
 
 def create_or_reuse_customer(profile: Profile, email: str, name: str, cpf_cnpj: str, phone: str | None) -> str:

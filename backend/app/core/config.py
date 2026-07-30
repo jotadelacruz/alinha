@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     asaas_base_url: str = "https://api.asaas.com/v3"
     asaas_webhook_token: str | None = None
     asaas_plan_price: float = 98.90
+    # Só usada pelo cadastro combinado (/billing/signup-and-subscribe) pra criar
+    # usuários Supabase pré-confirmados via Admin API. ATENÇÃO: esta chave ignora
+    # RLS em TODAS as tabelas do projeto, não só profiles — nunca logar seu valor,
+    # nunca expor ao frontend.
+    supabase_service_role_key: str | None = None
 
     @property
     def cors_origin_list(self) -> list[str]:
