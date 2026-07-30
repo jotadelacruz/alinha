@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import markCream from '../assets/brand/mark-cream.png';
 import markInk from '../assets/brand/mark-ink.png';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
+import { useSessionTimer } from '../context/SessionTimerContext';
 
 const NAV_ITEMS = [
   {
@@ -105,7 +106,9 @@ const ADMIN_NAV_ITEM = {
 export default function AppShell() {
   const { signOut } = useAuth();
   const { profile, suspendedMessage } = useProfile();
+  const { session, status, warningDismissed, dismissWarning } = useSessionTimer();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (suspendedMessage) {
     return (
@@ -187,6 +190,23 @@ export default function AppShell() {
       <main className="app-content">
         <Outlet />
       </main>
+
+      {session && status === 'warning' && !warningDismissed && (
+        <div className="session-warning-toast" role="alert">
+          <div className="session-warning-toast-text">
+            <strong>Faltam 5 minutos</strong>
+            <span>A sessão com {session.clientName || 'o cliente'} está terminando.</span>
+          </div>
+          <div className="session-warning-toast-actions">
+            <button type="button" onClick={() => navigate('/app/controle-horario')}>
+              Ver
+            </button>
+            <button type="button" className="session-warning-toast-dismiss" onClick={dismissWarning}>
+              Ok
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

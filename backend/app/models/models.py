@@ -26,7 +26,7 @@ class Profile(Base):
     role: Mapped[str] = mapped_column(Text, default="Profissional")
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     initials: Mapped[str | None] = mapped_column(Text, default="")
-    theme: Mapped[str] = mapped_column(Text, default="light")
+    theme: Mapped[str] = mapped_column(Text, default="brand")
     color_theme: Mapped[str] = mapped_column(Text, default="azul")
     work_start: Mapped[str] = mapped_column(Time, default="08:00:00")
     work_end: Mapped[str] = mapped_column(Time, default="18:00:00")

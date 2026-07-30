@@ -60,9 +60,9 @@
   --navy-wash: #1f2e29;
 }
 
-/* Tema "Marca" — visual alinhado à landing page: menu lateral escuro fixo,
-   conteúdo off-white e tipografia serifada nos títulos. Independente da
-   escolha de "Cor do tema" (azul/verde), que não se aplica aqui. */
+/* Tema "Marca" — visual alinhado à landing page: menu lateral escuro fixo e
+   conteúdo off-white. Independente da escolha de "Cor do tema" (azul/verde),
+   que não se aplica aqui. */
 [data-theme='brand'] {
   --paper: #f0ede6;
   --paper-soft: #e7e2d4;
@@ -80,15 +80,6 @@
   --sidebar-bg: #1c1b1a;
   --sidebar-ink: #f0ede6;
   --sidebar-ink-soft: #a39c8d;
-}
-
-[data-theme='brand'] h1,
-[data-theme='brand'] h2,
-[data-theme='brand'] h3,
-[data-theme='brand'] .display {
-  font-family: 'Fraunces', serif;
-  font-weight: 600;
-  letter-spacing: 0;
 }
 
 [data-theme='brand'] button {
@@ -2253,6 +2244,72 @@ textarea {
 
 .timer-idle-item:hover {
   border-color: var(--navy-light);
+}
+
+.session-warning-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 380px;
+  background: var(--gold-wash);
+  border: 1px solid var(--gold);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: sessionWarningSlideIn 0.25s ease;
+}
+
+@keyframes sessionWarningSlideIn {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.session-warning-toast-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.session-warning-toast-text strong {
+  color: #8a6f1a;
+  font-size: 14px;
+}
+
+.session-warning-toast-text span {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.session-warning-toast-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.session-warning-toast-dismiss {
+  background: transparent;
+  border: 1px solid var(--gold);
+}
+
+@media (max-width: 480px) {
+  .session-warning-toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: none;
+  }
 }
 
 .timer-permission-banner {

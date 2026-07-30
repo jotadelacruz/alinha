@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { useProfile } from '../context/ProfileContext';
 import { useSessionTimer } from '../context/SessionTimerContext';
 import { isoDate } from '../lib/dateUtils';
 
@@ -15,17 +14,14 @@ function formatClock(totalSeconds) {
 }
 
 export default function ControleHorarioPage() {
-  const { profile } = useProfile();
-  const { session, startSession, endSession } = useSessionTimer();
+  const { session, sessionDuration, remaining, status, startSession, endSession } = useSessionTimer();
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [now, setNow] = useState(Date.now());
   const [notifPermission, setNotifPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
   );
-  const defaultSessionDuration = profile?.settings?.agenda?.sessionDuration || 50;
 
   useEffect(() => {
     async function load() {
@@ -45,19 +41,7 @@ export default function ControleHorarioPage() {
     load();
   }, []);
 
-  useEffect(() => {
-    if (!session) return;
-    setNow(Date.now());
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, [session]);
-
   const client = session ? clients.find((c) => c.id === session.clientId) : null;
-  const sessionDuration = session?.sessionDuration || defaultSessionDuration;
-  const elapsedSeconds = session ? Math.floor((now - session.startedAt) / 1000) : 0;
-  const totalSeconds = sessionDuration * 60;
-  const remaining = totalSeconds - elapsedSeconds;
-  const status = remaining <= 0 ? 'overtime' : remaining <= 300 ? 'warning' : 'normal';
 
   function requestNotificationPermission() {
     Notification.requestPermission().then(setNotifPermission);
