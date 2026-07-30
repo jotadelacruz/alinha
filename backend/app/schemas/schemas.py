@@ -330,3 +330,23 @@ class AdminAccountOut(CamelModel):
 
 class AdminAccountStatusUpdate(CamelModel):
     account_status: str
+
+
+# ---------- Billing (Asaas) ----------
+class BillingStatusOut(CamelModel):
+    account_status: str
+    subscription_status: str | None
+    trial_ends_at: datetime.datetime | None
+    billing_enrolled: bool  # False para contas grandfathered (trial_ends_at NULL)
+    plan_price: float
+
+
+class BillingSubscribeIn(CamelModel):
+    name: str
+    cpf_cnpj: str
+    billing_type: str  # 'PIX' | 'BOLETO' | 'CREDIT_CARD'
+    phone: str | None = None
+
+
+class BillingSubscribeOut(CamelModel):
+    invoice_url: str

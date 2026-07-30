@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.routers import (
     admin,
     appointments,
+    billing,
     bills,
     certificates,
     clients,
@@ -50,6 +51,7 @@ app.include_router(certificates.router)
 app.include_router(receipts.router)
 app.include_router(admin.router)
 app.include_router(data.router)
+app.include_router(billing.router)
 
 
 @app.get("/health")

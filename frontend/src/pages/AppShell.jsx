@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import markCream from '../assets/brand/mark-cream.png';
 import markInk from '../assets/brand/mark-ink.png';
 import { useAuth } from '../context/AuthContext';
@@ -115,7 +115,12 @@ export default function AppShell() {
       <div className="account-suspended-screen">
         <div className="account-suspended-card">
           <h2>Conta suspensa</h2>
-          <p>{suspendedMessage}</p>
+          <p>{suspendedMessage.message}</p>
+          {suspendedMessage.billingIssue && (
+            <Link to="/assinatura" className="account-suspended-subscribe-btn">
+              Assinar agora
+            </Link>
+          )}
           <button onClick={() => signOut()}>Sair</button>
         </div>
       </div>

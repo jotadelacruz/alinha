@@ -12,7 +12,7 @@ from sqlalchemy import (
     Time,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -52,6 +52,13 @@ class Profile(Base):
     unpaid_sessions_block_threshold: Mapped[int] = mapped_column(Integer, default=3)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     account_status: Mapped[str] = mapped_column(Text, default="active")
+    # Sem default= no lado Python de propósito: quem controla esses dois é o
+    # DEFAULT da coluna no Postgres (ver migration), pra contas grandfathered
+    # (criadas antes da cobrança existir) ficarem NULL/NULL.
+    trial_ends_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    subscription_status: Mapped[str | None] = mapped_column(Text, nullable=True)
+    asaas_customer_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    asaas_subscription_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -221,3 +228,15 @@ class ProntuarioAccessLog(Base):
     action: Mapped[str] = mapped_column(Text)  # 'view' | 'create' | 'update' | 'delete' | 'password_verify_failed'
     session_record_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AsaasWebhookEvent(Base):
+    """Log de eventos de webhook da Asaas: idempotência (evento pode ser reentregue)
+    e única visibilidade sobre o que a Asaas realmente enviou."""
+
+    __tablename__ = "asaas_webhook_events"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    event_type: Mapped[str] = mapped_column(Text)
+    payload: Mapped[dict] = mapped_column(JSONB)
+    received_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())

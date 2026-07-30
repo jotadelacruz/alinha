@@ -15,6 +15,16 @@ export function formatCNPJ(value) {
   return digits;
 }
 
+/** Formata como CPF (11 dígitos) enquanto digita; ao passar de 11 dígitos, vira CNPJ. */
+export function formatCpfCnpj(value) {
+  const digits = (value || '').replace(/\D/g, '').slice(0, 14);
+  if (digits.length > 11) return formatCNPJ(digits);
+  if (digits.length > 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  if (digits.length > 6) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  if (digits.length > 3) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  return digits;
+}
+
 export function formatCEP(value) {
   const digits = (value || '').replace(/\D/g, '').slice(0, 8);
   if (digits.length > 5) return `${digits.slice(0, 5)}-${digits.slice(5)}`;

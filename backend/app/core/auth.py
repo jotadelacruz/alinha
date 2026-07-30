@@ -66,24 +66,46 @@ def _decode_supabase_jwt(token: str) -> dict:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token inválido ou expirado") from exc
 
 
-def get_current_user_id(
-    credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)
+def get_current_user_id_unchecked(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> uuid.UUID:
+    """Só valida o JWT, sem checar account_status. Uso restrito às rotas de
+    /billing, que precisam ser alcançáveis por uma conta já suspensa (senão ela
+    nunca conseguiria pagar pra voltar)."""
     payload = _decode_supabase_jwt(credentials.credentials)
     sub = payload.get("sub")
     if not sub:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token sem identificação de usuário")
-    user_id = uuid.UUID(sub)
+    return uuid.UUID(sub)
 
+
+def get_current_user_id(
+    user_id: uuid.UUID = Depends(get_current_user_id_unchecked), db: Session = Depends(get_db)
+) -> uuid.UUID:
     # Import local pra evitar import circular (models importa Base de database, não de auth).
     from app.models.models import Profile
+    from app.services.billing_service import sync_trial_status
 
-    account_status = db.query(Profile.account_status).filter(Profile.id == user_id).scalar()
-    if account_status == "suspended":
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN,
-            "Conta suspensa por pendência de pagamento. Entre em contato com o suporte.",
-        )
+    row = (
+        db.query(Profile.account_status, Profile.trial_ends_at, Profile.subscription_status)
+        .filter(Profile.id == user_id)
+        .first()
+    )
+    if row is not None:
+        account_status, trial_ends_at, subscription_status = row
+        account_status = sync_trial_status(db, user_id, account_status, trial_ends_at, subscription_status)
+        if account_status == "suspended":
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                {
+                    "message": (
+                        "Seu período de teste terminou. Assine para continuar usando o Alinha."
+                        if trial_ends_at is not None
+                        else "Conta suspensa por pendência de pagamento. Entre em contato com o suporte."
+                    ),
+                    "billingIssue": trial_ends_at is not None,
+                },
+            )
     return user_id
 
 

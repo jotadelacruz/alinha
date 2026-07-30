@@ -20,7 +20,12 @@ export function ProfileProvider({ children }) {
   useEffect(() => {
     refreshProfile()
       .catch((e) => {
-        if (e.status === 403) setSuspendedMessage(e.message);
+        if (e.status === 403) {
+          const detail = e.body?.detail;
+          setSuspendedMessage(
+            detail && typeof detail === 'object' ? detail : { message: e.message, billingIssue: false }
+          );
+        }
       })
       .finally(() => setLoading(false));
   }, [refreshProfile]);

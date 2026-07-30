@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
+import BillingPanel from '../components/BillingPanel';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { ALL_WEEK_DAYS } from '../lib/dateUtils';
@@ -19,6 +20,7 @@ const TABS = [
   { key: 'agenda', label: 'Agenda' },
   { key: 'consultorio', label: 'Consultório' },
   { key: 'preferencias', label: 'Preferências' },
+  { key: 'assinatura', label: 'Assinatura' },
   { key: 'mensagens', label: 'Modelos de mensagem' },
   { key: 'lgpd', label: 'LGPD e Termos' },
   { key: 'dados', label: 'Dados' },
@@ -608,8 +610,17 @@ export default function ConfiguracoesPage() {
               </section>
             )}
 
-            {tab !== 'dados' && tab !== 'lgpd' && <button type="submit">Salvar configurações</button>}
+            {tab !== 'dados' && tab !== 'lgpd' && tab !== 'assinatura' && (
+              <button type="submit">Salvar configurações</button>
+            )}
           </form>
+
+          {tab === 'assinatura' && (
+            <section>
+              <h3>Assinatura</h3>
+              <BillingPanel />
+            </section>
+          )}
 
           {tab === 'lgpd' && (
             <section>
