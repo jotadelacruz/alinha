@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useProfile } from '../context/ProfileContext';
 import { useSessionTimer } from '../context/SessionTimerContext';
-import { TIME_SLOTS, WEEK_DAYS, addDays, formatBR, isoDate, mondayOf, weekdayNameOf } from '../lib/dateUtils';
+import { WEEK_DAYS, addDays, buildTimeSlots, formatBR, isoDate, mondayOf, weekdayNameOf } from '../lib/dateUtils';
 import { confirmationMessage, whatsappLink } from '../lib/whatsapp';
 
 const TODAY = new Date();
@@ -28,6 +29,7 @@ const EMPTY_FORM = {
 
 export default function AgendaPage() {
   const navigate = useNavigate();
+  const { profile } = useProfile();
   const { startSession } = useSessionTimer();
   const [weekOffset, setWeekOffset] = useState(0);
   const [view, setView] = useState('grade'); // 'grade' | 'lista'
@@ -38,6 +40,11 @@ export default function AgendaPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [showForm, setShowForm] = useState(false);
   const [selected, setSelected] = useState(null);
+
+  const timeSlots = useMemo(
+    () => buildTimeSlots(profile?.settings?.agenda?.workStart, profile?.settings?.agenda?.workEnd),
+    [profile]
+  );
 
   const monday = useMemo(() => addDays(mondayOf(TODAY), weekOffset * 7), [weekOffset]);
   const weekDates = useMemo(() => WEEK_DAYS.map((_, i) => addDays(monday, i)), [monday]);
@@ -72,7 +79,7 @@ export default function AgendaPage() {
       setError('Cadastre um cliente primeiro');
       return;
     }
-    setForm({ ...EMPTY_FORM, clientId: clients[0].id, dateIso: dateIso || fromISO, time: time || '08:00' });
+    setForm({ ...EMPTY_FORM, clientId: clients[0].id, dateIso: dateIso || fromISO, time: time || timeSlots[0] });
     setShowForm(true);
   }
 
@@ -229,7 +236,7 @@ export default function AgendaPage() {
             required
           />
           <select value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })}>
-            {TIME_SLOTS.map((t) => (
+            {timeSlots.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
@@ -281,7 +288,7 @@ export default function AgendaPage() {
           })}
 
           <div className="time-col">
-            {TIME_SLOTS.map((t) => (
+            {timeSlots.map((t) => (
               <div key={t} className="time-cell">
                 {t}
               </div>
@@ -293,7 +300,7 @@ export default function AgendaPage() {
             const dayAppts = grouped[dISO] || [];
             return (
               <div key={dISO} className="day-col">
-                {TIME_SLOTS.map((t) => {
+                {timeSlots.map((t) => {
                   const occupied = dayAppts.some((a) => a.time === t);
                   return (
                     <div
@@ -306,7 +313,7 @@ export default function AgendaPage() {
                 })}
                 {dayAppts.map((a) => {
                   const client = clientById(a.clientId);
-                  const rowIndex = TIME_SLOTS.indexOf(a.time);
+                  const rowIndex = timeSlots.indexOf(a.time);
                   if (rowIndex === -1) return null;
                   return (
                     <button

@@ -2,6 +2,31 @@ export const WEEK_DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
 export const ALL_WEEK_DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 export const TIME_SLOTS = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
 
+/**
+ * Gera os horários (de hora em hora) entre o início e o fim do expediente configurados
+ * em Configurações > Agenda. Se o fim for igual ou "menor" que o início (ex.: começar às
+ * 01:00 e terminar à 00:00), trata o fim como virada de dia, cobrindo as 24h.
+ */
+export function buildTimeSlots(workStart, workEnd, stepMinutes = 60) {
+  if (!workStart || !workEnd) return TIME_SLOTS;
+  const toMinutes = (hhmm) => {
+    const [h, m] = hhmm.split(':').map(Number);
+    return h * 60 + m;
+  };
+  const startMin = toMinutes(workStart);
+  let endMin = toMinutes(workEnd);
+  if (endMin <= startMin) endMin += 24 * 60;
+
+  const slots = [];
+  for (let min = startMin; min < endMin; min += stepMinutes) {
+    const wrapped = min % (24 * 60);
+    const h = String(Math.floor(wrapped / 60)).padStart(2, '0');
+    const m = String(wrapped % 60).padStart(2, '0');
+    slots.push(`${h}:${m}`);
+  }
+  return slots.length > 0 ? slots : TIME_SLOTS;
+}
+
 export function isoDate(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
