@@ -48,6 +48,10 @@ def _to_profile_out(p: Profile) -> ProfileOut:
                 "confirmation": p.message_template_confirmation or "",
                 "package": p.message_template_package or "",
             },
+            "finance": {
+                "bill_categories": p.bill_categories or [],
+                "payment_methods": p.payment_methods or [],
+            },
             "has_prontuario_password": bool(p.prontuario_password_hash),
             "certificate_logo_url": p.certificate_logo_url,
             "package_alert_threshold": p.package_alert_threshold if p.package_alert_threshold is not None else 2,

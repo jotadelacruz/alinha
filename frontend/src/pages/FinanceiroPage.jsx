@@ -46,6 +46,12 @@ const EMPTY_BILL_FORM = { name: '', category: 'Outros', amount: '', dueDate: iso
 
 export default function FinanceiroPage() {
   const { profile } = useProfile();
+  const billCategories = profile?.settings?.finance?.billCategories?.length
+    ? profile.settings.finance.billCategories
+    : BILL_CATEGORIES;
+  const paymentMethods = profile?.settings?.finance?.paymentMethods?.length
+    ? profile.settings.finance.paymentMethods
+    : ['PIX', 'Dinheiro', 'Cartão', 'Transferência', 'Outro'];
   const [tab, setTab] = useState('por-cliente');
   const [clients, setClients] = useState([]);
   const [finances, setFinances] = useState({});
@@ -355,11 +361,9 @@ export default function FinanceiroPage() {
             value={paymentForm.paymentMethod}
             onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value })}
           >
-            <option>PIX</option>
-            <option>Dinheiro</option>
-            <option>Cartão</option>
-            <option>Transferência</option>
-            <option>Outro</option>
+            {paymentMethods.map((method) => (
+              <option key={method}>{method}</option>
+            ))}
           </select>
           <button type="submit">Registrar</button>
           <button type="button" onClick={() => setPayingClientId(null)}>
@@ -383,9 +387,9 @@ export default function FinanceiroPage() {
                 value={billForm.category}
                 onChange={(e) => setBillForm({ ...billForm, category: e.target.value })}
               >
-                {BILL_CATEGORIES.map((cat) => (
+                {billCategories.map((cat) => (
                   <option key={cat} value={cat}>
-                    {CATEGORY_ICONS[cat]} {cat}
+                    {CATEGORY_ICONS[cat] || '📦'} {cat}
                   </option>
                 ))}
               </select>

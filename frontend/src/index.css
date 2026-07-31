@@ -1317,6 +1317,56 @@ textarea {
   color: var(--navy);
 }
 
+.editable-list-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.editable-list-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.editable-list-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.editable-list-chip button:hover {
+  background: var(--alert-wash);
+  color: var(--alert);
+}
+
+.editable-list-add {
+  display: flex;
+  gap: 8px;
+}
+
+.editable-list-add input {
+  flex: 1;
+}
+
 .settings-layout {
   display: flex;
   gap: 28px;

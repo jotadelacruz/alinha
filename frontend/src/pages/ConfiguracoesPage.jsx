@@ -19,6 +19,7 @@ const TABS = [
   { key: 'aparencia', label: 'Aparência' },
   { key: 'agenda', label: 'Agenda' },
   { key: 'consultorio', label: 'Consultório' },
+  { key: 'financeiro', label: 'Financeiro' },
   { key: 'preferencias', label: 'Preferências' },
   { key: 'assinatura', label: 'Assinatura' },
   { key: 'mensagens', label: 'Modelos de mensagem' },
@@ -50,6 +51,56 @@ function readImageAsDataUrl(file) {
     reader.onerror = () => reject(new Error('Erro ao ler o arquivo'));
     reader.readAsDataURL(file);
   });
+}
+
+function EditableList({ items, onChange, placeholder }) {
+  const [draft, setDraft] = useState('');
+
+  function addItem(e) {
+    e.preventDefault();
+    const value = draft.trim();
+    if (!value || items.includes(value)) {
+      setDraft('');
+      return;
+    }
+    onChange([...items, value]);
+    setDraft('');
+  }
+
+  function removeItem(item) {
+    if (items.length <= 1) return;
+    onChange(items.filter((i) => i !== item));
+  }
+
+  return (
+    <div className="editable-list">
+      <div className="editable-list-chips">
+        {items.map((item) => (
+          <span key={item} className="editable-list-chip">
+            {item}
+            {items.length > 1 && (
+              <button type="button" onClick={() => removeItem(item)} aria-label={`Remover ${item}`}>
+                ×
+              </button>
+            )}
+          </span>
+        ))}
+      </div>
+      <div className="editable-list-add">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={placeholder}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') addItem(e);
+          }}
+        />
+        <button type="button" onClick={addItem}>
+          Adicionar
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function AccountPasswordSection() {
@@ -238,6 +289,8 @@ export default function ConfiguracoesPage() {
       messageTemplateCharge: profile.settings.messageTemplates.charge,
       messageTemplateConfirmation: profile.settings.messageTemplates.confirmation,
       messageTemplatePackage: profile.settings.messageTemplates.package,
+      billCategories: profile.settings.finance.billCategories,
+      paymentMethods: profile.settings.finance.paymentMethods,
       packageAlertThreshold: profile.settings.packageAlertThreshold,
       unpaidSessionsBlockThreshold: profile.settings.unpaidSessionsBlockThreshold,
       certificateLogoUrl: profile.settings.certificateLogoUrl,
@@ -547,6 +600,34 @@ export default function ConfiguracoesPage() {
                     Chave PIX
                     <input value={form.pixKey} onChange={(e) => setForm({ ...form, pixKey: e.target.value })} />
                   </label>
+                </div>
+              </section>
+            )}
+
+            {tab === 'financeiro' && (
+              <section>
+                <h3>Financeiro</h3>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 8 }}>Categorias de contas a pagar</label>
+                  <EditableList
+                    items={form.billCategories}
+                    onChange={(items) => setForm({ ...form, billCategories: items })}
+                    placeholder="Nova categoria"
+                  />
+                  <span className="client-form-section-hint">
+                    Aparecem no formulário de nova conta em Financeiro › Contas a pagar.
+                  </span>
+                </div>
+                <div style={{ marginTop: 20 }}>
+                  <label style={{ display: 'block', marginBottom: 8 }}>Formas de recebimento</label>
+                  <EditableList
+                    items={form.paymentMethods}
+                    onChange={(items) => setForm({ ...form, paymentMethods: items })}
+                    placeholder="Nova forma de recebimento"
+                  />
+                  <span className="client-form-section-hint">
+                    Aparecem no formulário de registrar recebimento em Financeiro.
+                  </span>
                 </div>
               </section>
             )}

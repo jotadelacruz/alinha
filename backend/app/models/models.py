@@ -50,6 +50,24 @@ class Profile(Base):
     certificate_logo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     package_alert_threshold: Mapped[int] = mapped_column(Integer, default=2)
     unpaid_sessions_block_threshold: Mapped[int] = mapped_column(Integer, default=3)
+    bill_categories: Mapped[list[str]] = mapped_column(
+        ARRAY(Text),
+        default=lambda: [
+            "Aluguel",
+            "Água",
+            "Luz",
+            "Internet",
+            "Telefone",
+            "Material de consultório",
+            "Supervisão",
+            "Assinaturas/Software",
+            "Impostos",
+            "Outros",
+        ],
+    )
+    payment_methods: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), default=lambda: ["PIX", "Dinheiro", "Cartão", "Transferência", "Outro"]
+    )
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     account_status: Mapped[str] = mapped_column(Text, default="active")
     # Sem default= no lado Python de propósito: quem controla esses dois é o

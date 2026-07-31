@@ -59,6 +59,30 @@ def test_profile_roundtrip():
     assert body["settings"]["agenda"]["workDays"] == ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
 
 
+def test_profile_finance_settings_default_and_editable():
+    """Configurações > Financeiro: categorias de contas a pagar e formas de recebimento
+    vêm com um padrão e são editáveis por profissional via PATCH /profile."""
+    resp = client.get("/profile")
+    finance = resp.json()["settings"]["finance"]
+    assert "Outros" in finance["billCategories"]
+    assert "PIX" in finance["paymentMethods"]
+
+    resp = client.patch(
+        "/profile",
+        json={"billCategories": ["Aluguel", "Nova categoria"], "paymentMethods": ["PIX", "Boleto"]},
+    )
+    assert resp.status_code == 200, resp.text
+    finance = resp.json()["settings"]["finance"]
+    assert finance["billCategories"] == ["Aluguel", "Nova categoria"]
+    assert finance["paymentMethods"] == ["PIX", "Boleto"]
+
+    # PATCH de outro campo não deve zerar as listas.
+    resp = client.patch("/profile", json={"role": "Psicóloga"})
+    finance = resp.json()["settings"]["finance"]
+    assert finance["billCategories"] == ["Aluguel", "Nova categoria"]
+    assert finance["paymentMethods"] == ["PIX", "Boleto"]
+
+
 def test_create_client_generates_recurring_appointments():
     today = datetime.date.today()
     week_days = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]

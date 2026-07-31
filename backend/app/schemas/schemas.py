@@ -48,6 +48,11 @@ class MessageTemplateSettings(CamelModel):
     package: str
 
 
+class FinanceSettings(CamelModel):
+    bill_categories: list[str]
+    payment_methods: list[str]
+
+
 class ProfileSettings(CamelModel):
     theme: str
     color_theme: str
@@ -55,6 +60,7 @@ class ProfileSettings(CamelModel):
     notifications: NotificationSettings
     office: OfficeSettings
     message_templates: MessageTemplateSettings
+    finance: FinanceSettings
     has_prontuario_password: bool
     certificate_logo_url: str | None
     package_alert_threshold: int
@@ -98,6 +104,8 @@ class ProfileUpdate(CamelModel):
     certificate_logo_url: str | None = None
     package_alert_threshold: int | None = None
     unpaid_sessions_block_threshold: int | None = None
+    bill_categories: list[str] | None = None
+    payment_methods: list[str] | None = None
 
 
 class ProntuarioPasswordIn(CamelModel):
