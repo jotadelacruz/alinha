@@ -58,6 +58,7 @@ export default function FinanceiroPage() {
   const [showBillForm, setShowBillForm] = useState(false);
   const [billForm, setBillForm] = useState(EMPTY_BILL_FORM);
   const [monthlyHistory, setMonthlyHistory] = useState([]);
+  const [credits, setCredits] = useState({});
 
   useEffect(() => {
     loadAll();
@@ -70,13 +71,14 @@ export default function FinanceiroPage() {
         return { iso: isoDate(d), label: MONTH_LABELS_SHORT[d.getMonth()] };
       });
 
-      const [clientList, summaryData, billList, txList, finList, historyTxs] = await Promise.all([
+      const [clientList, summaryData, billList, txList, finList, historyTxs, creditList] = await Promise.all([
         api.get('/clients'),
         api.get('/finance/summary', { month_iso: CURRENT_MONTH_ISO }),
         api.get('/bills'),
         api.get('/payment-transactions', { reference_month_iso: CURRENT_MONTH_ISO }),
         api.get('/finance/clients', { month_iso: CURRENT_MONTH_ISO }),
         Promise.all(months.map((m) => api.get('/payment-transactions', { reference_month_iso: m.iso }))),
+        api.get('/client-credits'),
       ]);
 
       setClients(clientList);
@@ -85,6 +87,7 @@ export default function FinanceiroPage() {
       setTransactions(txList);
       setFinances(Object.fromEntries(finList.map((f) => [f.clientId, f])));
       setMonthlyHistory(months.map((m, i) => ({ ...m, total: historyTxs[i].reduce((sum, t) => sum + t.amount, 0) })));
+      setCredits(Object.fromEntries(creditList.map((c) => [c.clientId, c.balance])));
     } catch (e) {
       setError(e.message);
     }
@@ -265,6 +268,7 @@ export default function FinanceiroPage() {
               <th>Sessões no mês</th>
               <th>Devido</th>
               <th>Recebido</th>
+              <th>Crédito</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -272,6 +276,7 @@ export default function FinanceiroPage() {
           <tbody>
             {clients.map((c) => {
               const fin = finances[c.id];
+              const creditBalance = credits[c.id] || 0;
               return (
                 <tr key={c.id}>
                   <td>{c.name}</td>
@@ -287,6 +292,15 @@ export default function FinanceiroPage() {
                   </td>
                   <td>{fin ? fmtBRL(fin.due) : '—'}</td>
                   <td>{fin ? fmtBRL(fin.received) : '—'}</td>
+                  <td>
+                    {creditBalance > 0 ? (
+                      <span className="credit-badge" title="Saldo de crédito: sobra de pagamentos anteriores, aplicada automaticamente nas próximas cobranças">
+                        {fmtBRL(creditBalance)}
+                      </span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                   <td>{fin ? STATUS_LABEL[fin.status] : '—'}</td>
                   <td>
                     <button onClick={() => setPayingClientId(c.id)}>Registrar recebimento</button>
