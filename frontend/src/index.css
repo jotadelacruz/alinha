@@ -599,6 +599,10 @@ form label {
   gap: 4px;
 }
 
+.appt-form-recurrence {
+  width: 100%;
+}
+
 .client-form-section {
   width: 100%;
   display: flex;
