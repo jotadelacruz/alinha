@@ -28,8 +28,12 @@ def _require_configured() -> None:
 
 
 def _headers() -> dict:
+    # Este projeto usa o sistema novo de chaves da Supabase (sb_publishable_.../
+    # sb_secret_..., não JWT). Nesse formato a chave secreta vai só no header
+    # apikey — mandar ela também em Authorization: Bearer faz a Supabase tentar
+    # decodificar como JWT antigo e rejeitar com "Invalid JWT".
     key = settings.supabase_service_role_key or ""
-    return {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    return {"apikey": key, "Content-Type": "application/json"}
 
 
 def _translate_admin_error(resp: httpx.Response) -> str:
