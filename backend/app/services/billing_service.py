@@ -15,7 +15,7 @@ import httpx
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.models import AsaasWebhookEvent, Profile
+from app.models.models import AsaasWebhookEvent, Coupon, Profile
 
 
 class AsaasNotConfigured(RuntimeError):
@@ -67,6 +67,43 @@ def wait_for_profile(
     return None
 
 
+def redeem_coupon(db: Session, code: str | None) -> tuple[Coupon | None, str | None]:
+    """Valida o cupom (se informado) e devolve (coupon, erro). Não incrementa
+    used_count ainda — isso só acontece em mark_coupon_redeemed, depois que a
+    assinatura é criada de verdade na Asaas (senão uma falha na Asaas queimaria
+    um uso do cupom à toa)."""
+    if not code or not code.strip():
+        return None, None
+    normalized = code.strip().upper()
+    coupon = db.query(Coupon).filter(Coupon.code == normalized).first()
+    if coupon is None or not coupon.active:
+        return None, "Cupom inválido"
+    if coupon.expires_at and coupon.expires_at < datetime.datetime.now(datetime.timezone.utc):
+        return None, "Cupom expirado"
+    if coupon.max_uses is not None and coupon.used_count >= coupon.max_uses:
+        return None, "Cupom esgotado"
+    return coupon, None
+
+
+def apply_coupon_discount(plan_price: float, coupon: Coupon | None) -> float:
+    if coupon is None:
+        return plan_price
+    if coupon.discount_type == "percentage":
+        discounted = plan_price * (1 - float(coupon.discount_value) / 100)
+    else:
+        discounted = plan_price - float(coupon.discount_value)
+    return max(0.0, round(discounted, 2))
+
+
+def mark_coupon_redeemed(profile: Profile, coupon: Coupon) -> None:
+    """Chamar só depois que a assinatura foi criada com sucesso na Asaas.
+    Não é atômico contra corrida entre duas pessoas usando o último uso do
+    mesmo cupom ao mesmo tempo — aceitável pro volume desta aplicação, não é
+    dinheiro perdido, só um desconto a mais em um caso raro."""
+    coupon.used_count += 1
+    profile.coupon_code = coupon.code
+
+
 def create_or_reuse_customer(profile: Profile, email: str, name: str, cpf_cnpj: str, phone: str | None) -> str:
     if profile.asaas_customer_id:
         return profile.asaas_customer_id
@@ -88,12 +125,16 @@ def create_or_reuse_customer(profile: Profile, email: str, name: str, cpf_cnpj: 
     return profile.asaas_customer_id
 
 
-def create_subscription(profile: Profile, customer_id: str, billing_type: str) -> str:
+def create_subscription(profile: Profile, customer_id: str, billing_type: str, value: float | None = None) -> str:
     """Cria (ou reaproveita, se já existir — protege contra duplo clique) a
-    assinatura e devolve a invoiceUrl da primeira cobrança."""
+    assinatura e devolve a invoiceUrl da primeira cobrança. `value` permite
+    cobrar um valor diferente do padrão (cupom de desconto) — o desconto vale
+    enquanto durar a assinatura, não só na primeira cobrança, porque é o mesmo
+    `value` que a Asaas usa em todos os ciclos futuros."""
     if profile.asaas_subscription_id:
         return _first_invoice_url(profile.asaas_subscription_id)
     _require_configured()
+    charge_value = value if value is not None else settings.asaas_plan_price
     now = datetime.datetime.now(datetime.timezone.utc)
     next_due = profile.trial_ends_at.date() if profile.trial_ends_at and profile.trial_ends_at > now else now.date()
     resp = httpx.post(
@@ -102,7 +143,7 @@ def create_subscription(profile: Profile, customer_id: str, billing_type: str) -
         json={
             "customer": customer_id,
             "billingType": billing_type,
-            "value": settings.asaas_plan_price,
+            "value": charge_value,
             "cycle": "MONTHLY",
             "nextDueDate": next_due.isoformat(),
             "description": "Assinatura Alinha",
@@ -113,6 +154,7 @@ def create_subscription(profile: Profile, customer_id: str, billing_type: str) -
     resp.raise_for_status()
     profile.asaas_subscription_id = resp.json()["id"]
     profile.subscription_status = "pending"  # só vira 'active' quando o webhook confirmar o pagamento
+    profile.subscription_value = charge_value
     return _first_invoice_url(profile.asaas_subscription_id)
 
 

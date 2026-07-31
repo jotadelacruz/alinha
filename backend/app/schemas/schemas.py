@@ -347,6 +347,7 @@ class BillingSubscribeIn(CamelModel):
     cpf_cnpj: str
     billing_type: str  # 'PIX' | 'BOLETO' | 'CREDIT_CARD'
     phone: str | None = None
+    coupon_code: str | None = None
 
 
 class BillingSubscribeOut(CamelModel):
@@ -360,6 +361,7 @@ class SignupSubscribeIn(CamelModel):
     cpf_cnpj: str
     billing_type: Literal["PIX", "BOLETO", "CREDIT_CARD"]
     phone: str | None = None
+    coupon_code: str | None = None
     honeypot: str = ""  # campo escondido no formulário; se vier preenchido, é bot
 
 

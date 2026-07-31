@@ -18,6 +18,7 @@ const EMPTY_FORM = {
   cpfCnpj: '',
   billingType: 'PIX',
   phone: '',
+  couponCode: '',
   honeypot: '',
 };
 
@@ -93,6 +94,11 @@ export default function AssinarPage() {
             </option>
           ))}
         </select>
+        <input
+          value={form.couponCode}
+          onChange={(e) => setForm({ ...form, couponCode: e.target.value })}
+          placeholder="Cupom de desconto (opcional)"
+        />
 
         <input
           type="text"

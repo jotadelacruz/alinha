@@ -59,6 +59,8 @@ class Profile(Base):
     subscription_status: Mapped[str | None] = mapped_column(Text, nullable=True)
     asaas_customer_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     asaas_subscription_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    coupon_code: Mapped[str | None] = mapped_column(Text, nullable=True)  # trilha de auditoria, sem FK de propósito
+    subscription_value: Mapped[float | None] = mapped_column(Numeric, nullable=True)
     created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -240,3 +242,19 @@ class AsaasWebhookEvent(Base):
     event_type: Mapped[str] = mapped_column(Text)
     payload: Mapped[dict] = mapped_column(JSONB)
     received_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Coupon(Base):
+    """Cadastro de cupom é manual (INSERT direto no banco), sem tela de
+    administração — ver billing_service.redeem_coupon/apply_coupon_discount."""
+
+    __tablename__ = "coupons"
+
+    code: Mapped[str] = mapped_column(Text, primary_key=True)
+    discount_type: Mapped[str] = mapped_column(Text)  # 'percentage' | 'fixed'
+    discount_value: Mapped[float] = mapped_column(Numeric)
+    max_uses: Mapped[int | None] = mapped_column(Integer, nullable=True)  # None = ilimitado
+    used_count: Mapped[int] = mapped_column(Integer, default=0)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    expires_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())

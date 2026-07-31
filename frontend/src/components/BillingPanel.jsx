@@ -19,7 +19,7 @@ export default function BillingPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: '', cpfCnpj: '', billingType: 'PIX', phone: '' });
+  const [form, setForm] = useState({ name: '', cpfCnpj: '', billingType: 'PIX', phone: '', couponCode: '' });
 
   useEffect(() => {
     api
@@ -95,6 +95,11 @@ export default function BillingPanel() {
               </option>
             ))}
           </select>
+          <input
+            value={form.couponCode}
+            onChange={(e) => setForm({ ...form, couponCode: e.target.value })}
+            placeholder="Cupom de desconto (opcional)"
+          />
           {error && <p className="error">{error}</p>}
           <button type="submit" disabled={submitting}>
             {submitting ? 'Aguarde…' : 'Assinar agora'}

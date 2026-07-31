@@ -32,7 +32,9 @@ def get_status(user_id: uuid.UUID = Depends(get_current_user_id_unchecked), db: 
         subscription_status=profile.subscription_status,
         trial_ends_at=profile.trial_ends_at,
         billing_enrolled=profile.trial_ends_at is not None,
-        plan_price=settings.asaas_plan_price,
+        # Reflete o valor real já combinado (com desconto de cupom, se houve) em
+        # vez de recalcular a partir do cupom, que pode ter mudado/expirado depois.
+        plan_price=float(profile.subscription_value) if profile.subscription_value is not None else settings.asaas_plan_price,
     )
 
 
@@ -51,10 +53,23 @@ def subscribe(
     row = db.execute(text("SELECT email FROM auth.users WHERE id = :id"), {"id": str(user_id)}).mappings().first()
     email = row["email"] if row else ""
 
+    # Só valida/consome o cupom se isto de fato vai criar uma assinatura nova —
+    # um retry sobre uma assinatura já existente não deve poder ser barrado por
+    # um cupom que expirou/esgotou nesse meio tempo, nem consumir o cupom de novo.
+    was_new_subscription = profile.asaas_subscription_id is None
+    coupon = None
+    if was_new_subscription:
+        coupon, coupon_error = billing_service.redeem_coupon(db, body.coupon_code)
+        if coupon_error:
+            raise HTTPException(400, coupon_error)
+    charge_value = billing_service.apply_coupon_discount(settings.asaas_plan_price, coupon)
+
     try:
         customer_id = billing_service.create_or_reuse_customer(profile, email, body.name, body.cpf_cnpj, body.phone)
         db.commit()
-        invoice_url = billing_service.create_subscription(profile, customer_id, body.billing_type)
+        invoice_url = billing_service.create_subscription(profile, customer_id, body.billing_type, value=charge_value)
+        if coupon and was_new_subscription:
+            billing_service.mark_coupon_redeemed(profile, coupon)
         db.commit()
     except billing_service.AsaasNotConfigured:
         raise HTTPException(503, "Cobrança ainda não configurada, tente novamente mais tarde")
@@ -89,12 +104,22 @@ def signup_and_subscribe(body: SignupSubscribeIn, request: Request, db: Session 
             "Faça login e assine pela página de Configurações.",
         )
 
+    was_new_subscription = profile.asaas_subscription_id is None
+    coupon = None
+    if was_new_subscription:
+        coupon, coupon_error = billing_service.redeem_coupon(db, body.coupon_code)
+        if coupon_error:
+            raise HTTPException(400, coupon_error)
+    charge_value = billing_service.apply_coupon_discount(settings.asaas_plan_price, coupon)
+
     try:
         customer_id = billing_service.create_or_reuse_customer(
             profile, body.email, body.name, body.cpf_cnpj, body.phone
         )
         db.commit()
-        invoice_url = billing_service.create_subscription(profile, customer_id, body.billing_type)
+        invoice_url = billing_service.create_subscription(profile, customer_id, body.billing_type, value=charge_value)
+        if coupon and was_new_subscription:
+            billing_service.mark_coupon_redeemed(profile, coupon)
         db.commit()
     except billing_service.AsaasNotConfigured:
         raise HTTPException(503, "Cobrança ainda não configurada, tente novamente mais tarde")
