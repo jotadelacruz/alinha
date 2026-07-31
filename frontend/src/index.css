@@ -932,15 +932,23 @@ textarea {
 }
 
 .whatsapp-confirm-btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: #25d366;
   color: #fff;
   font-weight: 600;
   font-size: 13px;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: var(--radius);
   text-decoration: none;
   margin: 4px 6px 10px 0;
+}
+
+.whatsapp-confirm-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
 
 .whatsapp-confirm-btn:hover {
