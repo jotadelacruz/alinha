@@ -118,7 +118,10 @@ export default function LandingPage() {
       <main>
         <section className="landing-hero">
           <div className="landing-hero-copy">
-            <span className="landing-badge">Para psicólogos, nutricionistas, fisioterapeutas e fonoaudiólogos</span>
+            <span className="landing-badge">Para psicólogos, terapeutas e psiquiatras</span>
+            <span className="landing-badge-note">
+              Em desenvolvimento para nutricionistas, fisioterapeutas, dentistas e médicos
+            </span>
             <h1>Seu consultório, fora da planilha</h1>
             <p>
               Agenda, prontuário, financeiro e atestado no mesmo lugar. Menos aba aberta, menos post-it — mais

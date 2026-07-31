@@ -1826,6 +1826,14 @@ textarea {
   letter-spacing: 0.02em;
 }
 
+.landing-badge-note {
+  display: block;
+  font-size: 12.5px;
+  color: #4a4744;
+  opacity: 0.75;
+  margin-top: 8px;
+}
+
 .landing-hero-actions {
   display: flex;
   flex-wrap: wrap;
