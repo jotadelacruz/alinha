@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useSessionTimer } from '../context/SessionTimerContext';
-import { TIME_SLOTS, WEEK_DAYS, addDays, formatBR, isoDate, mondayOf } from '../lib/dateUtils';
+import { TIME_SLOTS, WEEK_DAYS, addDays, formatBR, isoDate, mondayOf, weekdayNameOf } from '../lib/dateUtils';
 import { confirmationMessage, whatsappLink } from '../lib/whatsapp';
 
 const TODAY = new Date();
@@ -10,7 +10,21 @@ TODAY.setHours(0, 0, 0, 0);
 const TODAY_ISO = isoDate(TODAY);
 const ROW_HEIGHT = 64;
 
-const EMPTY_FORM = { clientId: '', dateIso: '', time: '08:00', modality: 'Presencial', status: 'confirmed' };
+const RECURRENCE_OPTIONS = [
+  { key: 'none', label: 'Não repetir' },
+  { key: 'Semanal', label: 'Semanal' },
+  { key: 'Quinzenal', label: 'Quinzenal' },
+  { key: 'Mensal', label: 'Mensal' },
+];
+
+const EMPTY_FORM = {
+  clientId: '',
+  dateIso: '',
+  time: '08:00',
+  modality: 'Presencial',
+  status: 'confirmed',
+  recurrence: 'none',
+};
 
 export default function AgendaPage() {
   const navigate = useNavigate();
@@ -69,8 +83,22 @@ export default function AgendaPage() {
       setError('Já existe uma consulta nesse horário');
       return;
     }
+    const weekDay = weekdayNameOf(form.dateIso);
+    if (form.recurrence !== 'none' && !weekDay) {
+      setError('Recorrência só é possível para dias de semana (segunda a sexta).');
+      return;
+    }
     try {
       await api.post('/appointments', form);
+      if (form.recurrence !== 'none') {
+        const c = clientById(form.clientId);
+        await api.put(`/clients/${c.id}`, {
+          ...c,
+          frequency: form.recurrence,
+          day: weekDay,
+          time: form.time,
+        });
+      }
       setShowForm(false);
       setError('');
       await reload();
@@ -212,6 +240,21 @@ export default function AgendaPage() {
             <option value="confirmed">Confirmada</option>
             <option value="pending">Aguardando confirmação</option>
           </select>
+          <label className="appt-form-recurrence">
+            Recorrência
+            <select value={form.recurrence} onChange={(e) => setForm({ ...form, recurrence: e.target.value })}>
+              {RECURRENCE_OPTIONS.map((r) => (
+                <option key={r.key} value={r.key}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+            {form.recurrence !== 'none' && (
+              <span className="client-form-section-hint">
+                Isso também atualiza a frequência e o dia/horário fixo do cliente em Clientes.
+              </span>
+            )}
+          </label>
           <button type="submit">Agendar</button>
           <button type="button" onClick={() => setShowForm(false)}>
             Cancelar

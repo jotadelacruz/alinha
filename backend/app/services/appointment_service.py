@@ -12,7 +12,8 @@ from app.services.date_utils import RECURRENCE_WEEKS_AHEAD, monday_of, next_week
 
 def generate_recurring_appointments_for_client(db: Session, owner_id: uuid.UUID, client: Client, today: datetime.date) -> int:
     """Gera (e persiste) a recorrência de UM cliente a partir de hoje. Retorna quantas foram criadas."""
-    if client.frequency not in ("Semanal", "Quinzenal"):
+    step_days_by_frequency = {"Semanal": 7, "Quinzenal": 14, "Mensal": 28}
+    if client.frequency not in step_days_by_frequency:
         return 0
     if not client.fixed_day or client.fixed_day == "-":
         return 0
@@ -20,7 +21,7 @@ def generate_recurring_appointments_for_client(db: Session, owner_id: uuid.UUID,
     monday = monday_of(today)
     horizon = monday + datetime.timedelta(days=RECURRENCE_WEEKS_AHEAD * 7)
     recurrence_id = f"rec-{client.id}"
-    step_days = 14 if client.frequency == "Quinzenal" else 7
+    step_days = step_days_by_frequency[client.frequency]
 
     first_occurrence = next_weekday_on_or_after(monday, client.fixed_day)
     if first_occurrence is None:

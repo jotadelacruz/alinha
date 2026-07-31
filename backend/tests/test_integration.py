@@ -88,6 +88,68 @@ def test_create_client_generates_recurring_appointments():
     assert len(client_appts) >= 4, f"esperado >=4 agendamentos recorrentes, veio {len(client_appts)}"
 
 
+def test_client_with_mensal_frequency_generates_recurring_appointment():
+    today = datetime.date.today()
+    week_days = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
+    fixed_day = week_days[today.weekday()] if today.weekday() < 5 else "Segunda"
+
+    resp = client.post(
+        "/clients",
+        json={
+            "name": "Cliente Mensal",
+            "frequency": "Mensal",
+            "day": fixed_day,
+            "time": "11:00",
+            "modality": "Presencial",
+            "value": 200,
+            "status": "ativo",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    client_id = resp.json()["id"]
+
+    appts = client.get("/appointments").json()
+    client_appts = [a for a in appts if a["clientId"] == client_id]
+    assert len(client_appts) >= 1, "Mensal não gerou nenhuma ocorrência (regressão do gap corrigido)"
+
+
+def test_update_client_frequency_via_put_generates_recurring_appointments():
+    """Cobre o mecanismo usado pelo botão de recorrência do formulário Nova
+    Consulta na Agenda: PUT /clients/{id} mudando frequency/day/time deve
+    gerar a série recorrente na hora, igual ao POST de criação."""
+    today = datetime.date.today()
+    week_days = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
+    fixed_day = week_days[today.weekday()] if today.weekday() < 5 else "Segunda"
+
+    resp = client.post(
+        "/clients",
+        json={"name": "Cliente Avulso", "frequency": "Pausada", "day": "-", "time": "-", "status": "ativo", "value": 180},
+    )
+    assert resp.status_code == 200, resp.text
+    client_id = resp.json()["id"]
+
+    appts_before = client.get("/appointments").json()
+    assert not [a for a in appts_before if a["clientId"] == client_id]
+
+    resp = client.put(
+        f"/clients/{client_id}",
+        json={
+            "name": "Cliente Avulso",
+            "frequency": "Semanal",
+            "day": fixed_day,
+            "time": "13:00",
+            "modality": "Presencial",
+            "value": 180,
+            "status": "ativo",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+
+    appts_after = client.get("/appointments").json()
+    client_appts = [a for a in appts_after if a["clientId"] == client_id]
+    assert len(client_appts) >= 4
+
+
 def test_finance_calculation_with_credit_surplus():
     resp = client.post(
         "/clients",
