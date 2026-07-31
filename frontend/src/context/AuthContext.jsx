@@ -18,8 +18,6 @@ export function AuthProvider({ children }) {
     session,
     user: session?.user ?? null,
     loading: session === undefined,
-    signUpWithEmail: (email, password, name) =>
-      supabase.auth.signUp({ email, password, options: { data: { name } } }),
     signInWithEmail: (email, password) => supabase.auth.signInWithPassword({ email, password }),
     signInWithGoogle: () =>
       supabase.auth.signInWithOAuth({

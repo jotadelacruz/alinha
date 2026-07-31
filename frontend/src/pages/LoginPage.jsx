@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { AuthBrand } from '../components/AuthBrand';
 import { useAuth } from '../context/AuthContext';
 
@@ -24,9 +24,8 @@ function translateAuthError(message) {
 }
 
 export default function LoginPage() {
-  const { user, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword } = useAuth();
-  const [mode, setMode] = useState('login'); // 'login' | 'signup' | 'forgot'
-  const [name, setName] = useState('');
+  const { user, signInWithEmail, signInWithGoogle, resetPassword } = useAuth();
+  const [forgotMode, setForgotMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -40,14 +39,9 @@ export default function LoginPage() {
     setError('');
     setInfo('');
     setLoading(true);
-    const { data, error } =
-      mode === 'login' ? await signInWithEmail(email, password) : await signUpWithEmail(email, password, name);
+    const { error } = await signInWithEmail(email, password);
     setLoading(false);
-    if (error) {
-      setError(translateAuthError(error.message));
-    } else if (mode === 'signup' && !data?.session) {
-      setInfo('Cadastro criado! Verifique seu e-mail para confirmar antes de entrar.');
-    }
+    if (error) setError(translateAuthError(error.message));
   }
 
   async function handleForgotPassword(e) {
@@ -61,7 +55,7 @@ export default function LoginPage() {
     else setInfo('Enviamos um e-mail com o link para redefinir sua senha.');
   }
 
-  if (mode === 'forgot') {
+  if (forgotMode) {
     return (
       <div className="auth-screen">
         <form onSubmit={handleForgotPassword} className="auth-form">
@@ -86,7 +80,7 @@ export default function LoginPage() {
             type="button"
             className="link"
             onClick={() => {
-              setMode('login');
+              setForgotMode(false);
               setError('');
               setInfo('');
             }}
@@ -102,11 +96,8 @@ export default function LoginPage() {
     <div className="auth-screen">
       <form onSubmit={handleSubmit} className="auth-form">
         <AuthBrand />
-        <p>{mode === 'login' ? 'Entrar na sua conta' : 'Criar conta'}</p>
+        <p>Entrar na sua conta</p>
 
-        {mode === 'signup' && (
-          <input placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} required />
-        )}
         <input
           type="email"
           placeholder="E-mail"
@@ -126,35 +117,25 @@ export default function LoginPage() {
         {info && <p className="auth-info">{info}</p>}
 
         <button type="submit" disabled={loading}>
-          {mode === 'login' ? 'Entrar' : 'Criar conta'}
+          Entrar
         </button>
         <button type="button" onClick={() => signInWithGoogle()}>
           Entrar com Google
         </button>
-        {mode === 'login' && (
-          <button
-            type="button"
-            className="link"
-            onClick={() => {
-              setMode('forgot');
-              setError('');
-              setInfo('');
-            }}
-          >
-            Esqueci minha senha
-          </button>
-        )}
         <button
           type="button"
           className="link"
           onClick={() => {
-            setMode(mode === 'login' ? 'signup' : 'login');
+            setForgotMode(true);
             setError('');
             setInfo('');
           }}
         >
-          {mode === 'login' ? 'Ainda não tem conta? Criar' : 'Já tem conta? Entrar'}
+          Esqueci minha senha
         </button>
+        <Link to="/assinar" className="link" style={{ textAlign: 'center' }}>
+          Ainda não tem conta? Assinar
+        </Link>
       </form>
     </div>
   );

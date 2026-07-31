@@ -2117,16 +2117,19 @@ textarea {
   }
 }
 
-.auth-form button.link {
+.auth-form button.link,
+.auth-form a.link {
   background: none;
   border: none;
   color: #1e4b43;
   font-size: 12.5px;
   align-self: center;
   padding: 4px;
+  text-decoration: none;
 }
 
-[data-theme='dark'] .auth-form button.link {
+[data-theme='dark'] .auth-form button.link,
+[data-theme='dark'] .auth-form a.link {
   color: #7fae9b;
 }
 
