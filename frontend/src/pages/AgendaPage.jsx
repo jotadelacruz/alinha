@@ -134,13 +134,6 @@ export default function AgendaPage() {
             <p>
               {formatBR(selected.dateIso)} às {selected.time}
             </p>
-            <div>
-              <button onClick={() => handleStatusChange(selected, 'confirmed')}>Marcar confirmada</button>
-              <button onClick={() => handleStatusChange(selected, 'pending')}>Marcar a confirmar</button>
-            </div>
-            {selected.dateIso === TODAY_ISO && (
-              <button onClick={() => handleStartSession(selected)}>Iniciar consulta</button>
-            )}
             {clientById(selected.clientId)?.phone ? (
               <a
                 className="whatsapp-confirm-btn"
@@ -155,6 +148,13 @@ export default function AgendaPage() {
               </a>
             ) : (
               <p className="whatsapp-no-phone">Cadastre o telefone do cliente para confirmar por WhatsApp.</p>
+            )}
+            <div>
+              <button onClick={() => handleStatusChange(selected, 'confirmed')}>Marcar confirmada</button>
+              <button onClick={() => handleStatusChange(selected, 'pending')}>Marcar a confirmar</button>
+            </div>
+            {selected.dateIso === TODAY_ISO && (
+              <button onClick={() => handleStartSession(selected)}>Iniciar consulta</button>
             )}
             <button onClick={() => handleDelete(selected)}>Cancelar esta consulta</button>
             {selected.recurrenceId && (

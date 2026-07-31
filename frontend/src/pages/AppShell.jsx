@@ -138,12 +138,12 @@ export default function AppShell() {
           aria-label="Abrir menu"
           onClick={() => setDrawerOpen(true)}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M3 6h18M3 12h18M3 18h18" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M9 6h6" />
+            <path d="M6 12h12" />
+            <path d="M3 18h18" />
           </svg>
         </button>
-        <img src={markInk} alt="Alinha" className="brand-mark-plain brand-mark-plain-light" />
-        <img src={markCream} alt="Alinha" className="brand-mark-plain brand-mark-plain-dark" />
         <span className="brand-name">Alinha</span>
       </header>
 
