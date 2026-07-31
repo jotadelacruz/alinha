@@ -500,6 +500,18 @@ table {
   cursor: help;
 }
 
+.suggestion-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--sage);
+  background: var(--sage-wash);
+  color: var(--sage);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .client-status.pausa {
   background: var(--gold-wash);
   color: #8a6f1a;

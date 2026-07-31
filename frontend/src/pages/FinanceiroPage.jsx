@@ -261,55 +261,74 @@ export default function FinanceiroPage() {
       </div>
 
       {tab === 'por-cliente' && (
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Sessões no mês</th>
-              <th>Devido</th>
-              <th>Recebido</th>
-              <th>Crédito</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {clients.map((c) => {
-              const fin = finances[c.id];
-              const creditBalance = credits[c.id] || 0;
-              return (
-                <tr key={c.id}>
-                  <td>{c.name}</td>
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      key={fin ? fin.sessions : 'loading'}
-                      defaultValue={fin ? fin.sessions : 0}
-                      style={{ width: 60 }}
-                      onBlur={(e) => handleSessionsChange(c, e.target.value)}
-                    />
-                  </td>
-                  <td>{fin ? fmtBRL(fin.due) : '—'}</td>
-                  <td>{fin ? fmtBRL(fin.received) : '—'}</td>
-                  <td>
-                    {creditBalance > 0 ? (
-                      <span className="credit-badge" title="Saldo de crédito: sobra de pagamentos anteriores, aplicada automaticamente nas próximas cobranças">
-                        {fmtBRL(creditBalance)}
-                      </span>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td>{fin ? STATUS_LABEL[fin.status] : '—'}</td>
-                  <td>
-                    <button onClick={() => setPayingClientId(c.id)}>Registrar recebimento</button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <>
+          <p className="client-form-section-hint" style={{ marginBottom: 10 }}>
+            "Sessões no mês" sugere automaticamente a quantidade de consultas já confirmadas na Agenda até
+            hoje — mas o número continua editável a qualquer momento, caso você precise ajustar.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Sessões no mês</th>
+                <th>Devido</th>
+                <th>Recebido</th>
+                <th>Crédito</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {clients.map((c) => {
+                const fin = finances[c.id];
+                const creditBalance = credits[c.id] || 0;
+                const hasSuggestion = fin && fin.confirmedSessionsCount !== fin.sessions;
+                return (
+                  <tr key={c.id}>
+                    <td>{c.name}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input
+                          type="number"
+                          min="0"
+                          key={fin ? fin.sessions : 'loading'}
+                          defaultValue={fin ? fin.sessions : 0}
+                          style={{ width: 60 }}
+                          onBlur={(e) => handleSessionsChange(c, e.target.value)}
+                        />
+                        {hasSuggestion && (
+                          <button
+                            type="button"
+                            className="suggestion-btn"
+                            title={`${fin.confirmedSessionsCount} consulta(s) confirmada(s) na Agenda até hoje`}
+                            onClick={() => handleSessionsChange(c, fin.confirmedSessionsCount)}
+                          >
+                            Usar {fin.confirmedSessionsCount}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td>{fin ? fmtBRL(fin.due) : '—'}</td>
+                    <td>{fin ? fmtBRL(fin.received) : '—'}</td>
+                    <td>
+                      {creditBalance > 0 ? (
+                        <span className="credit-badge" title="Saldo de crédito: sobra de pagamentos anteriores, aplicada automaticamente nas próximas cobranças">
+                          {fmtBRL(creditBalance)}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td>{fin ? STATUS_LABEL[fin.status] : '—'}</td>
+                    <td>
+                      <button onClick={() => setPayingClientId(c.id)}>Registrar recebimento</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </>
       )}
 
       {payingClientId && (

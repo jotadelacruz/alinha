@@ -197,6 +197,7 @@ class ClientFinanceOut(CamelModel):
     client_id: uuid.UUID
     reference_month: datetime.date
     sessions: int
+    confirmed_sessions_count: int  # sugestão automática (consultas confirmadas até hoje); "sessions" continua editável manualmente
     due: float
     received: float
     credit_applied: float

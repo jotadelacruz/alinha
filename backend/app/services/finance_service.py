@@ -6,7 +6,7 @@ import uuid
 
 from sqlalchemy.orm import Session
 
-from app.models.models import Client, ClientCredit, Payment, PaymentTransaction, Profile
+from app.models.models import Appointment, Client, ClientCredit, Payment, PaymentTransaction, Profile
 
 BLOCK_THRESHOLD_SESSIONS = 3  # fallback quando o perfil não tem preferência salva (ver Profile.unpaid_sessions_block_threshold)
 
@@ -24,6 +24,34 @@ def _block_threshold(db: Session, owner_id: uuid.UUID) -> int:
     if profile is None or profile.unpaid_sessions_block_threshold is None:
         return BLOCK_THRESHOLD_SESSIONS
     return profile.unpaid_sessions_block_threshold
+
+
+def _next_month(month_iso: datetime.date) -> datetime.date:
+    if month_iso.month == 12:
+        return month_iso.replace(year=month_iso.year + 1, month=1)
+    return month_iso.replace(month=month_iso.month + 1)
+
+
+def _confirmed_sessions_count_by_client(
+    db: Session, owner_id: uuid.UUID, month_iso: datetime.date, client_id: uuid.UUID | None = None
+) -> dict[uuid.UUID, int]:
+    """Contagem de consultas confirmadas no mês, até hoje — sugestão automática pra
+    'Sessões no mês' (a pessoa ainda pode digitar outro valor manualmente por cima)."""
+    today = datetime.date.today()
+    query = db.query(Appointment).filter(
+        Appointment.owner_id == owner_id,
+        Appointment.status == "confirmed",
+        Appointment.appointment_date >= month_iso,
+        Appointment.appointment_date < _next_month(month_iso),
+        Appointment.appointment_date <= today,
+    )
+    if client_id is not None:
+        query = query.filter(Appointment.client_id == client_id)
+
+    counts: dict[uuid.UUID, int] = {}
+    for a in query.all():
+        counts[a.client_id] = counts.get(a.client_id, 0) + 1
+    return counts
 
 
 def compute_client_finance(db: Session, owner_id: uuid.UUID, client_id: uuid.UUID, month_iso: datetime.date) -> dict:
@@ -66,11 +94,13 @@ def compute_client_finance(db: Session, owner_id: uuid.UUID, client_id: uuid.UUI
         status = "aberto"
 
     unpaid_sessions = _unpaid_sessions(sessions, recebido_total, float(client.session_value) if client else 0.0)
+    confirmed_sessions_count = _confirmed_sessions_count_by_client(db, owner_id, month_iso, client_id).get(client_id, 0)
 
     return {
         "client_id": client_id,
         "reference_month": month_iso,
         "sessions": sessions,
+        "confirmed_sessions_count": confirmed_sessions_count,
         "due": devido,
         "received": recebido_total,
         "credit_applied": credito_aplicado,
@@ -93,6 +123,7 @@ def compute_all_clients_finance(db: Session, owner_id: uuid.UUID, month_iso: dat
     )
     credits = db.query(ClientCredit).filter(ClientCredit.owner_id == owner_id).all()
     threshold = _block_threshold(db, owner_id)
+    confirmed_sessions_by_client = _confirmed_sessions_count_by_client(db, owner_id, month_iso)
 
     payment_by_client = {p.client_id: p for p in payments}
     recebido_direto_by_client: dict[uuid.UUID, float] = {}
@@ -129,6 +160,7 @@ def compute_all_clients_finance(db: Session, owner_id: uuid.UUID, month_iso: dat
             "client_id": client.id,
             "reference_month": month_iso,
             "sessions": sessions,
+            "confirmed_sessions_count": confirmed_sessions_by_client.get(client.id, 0),
             "due": devido,
             "received": recebido_total,
             "credit_applied": credito_aplicado,

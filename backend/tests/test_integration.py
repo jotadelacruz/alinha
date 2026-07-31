@@ -189,6 +189,47 @@ def test_finance_calculation_with_credit_surplus():
     assert batch[client_id]["balance"] == fin["balance"]
 
 
+def test_confirmed_sessions_count_only_counts_confirmed_appointments():
+    """confirmedSessionsCount é a sugestão automática pra 'Sessões no mês' (Financeiro) —
+    só conta consultas já confirmadas, não as pendentes ('a confirmar')."""
+    resp = client.post(
+        "/clients",
+        json={"name": "Cliente Sessoes Confirmadas", "value": 150, "day": "-", "time": "-", "status": "ativo"},
+    )
+    client_id = resp.json()["id"]
+    today = datetime.date.today()
+    month_iso = today.replace(day=1).isoformat()
+
+    resp = client.post(
+        "/appointments",
+        json={
+            "clientId": client_id,
+            "dateIso": today.isoformat(),
+            "time": "09:00",
+            "modality": "Presencial",
+            "status": "confirmed",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    resp = client.post(
+        "/appointments",
+        json={
+            "clientId": client_id,
+            "dateIso": today.isoformat(),
+            "time": "10:00",
+            "modality": "Presencial",
+            "status": "pending",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+
+    fin = client.get(f"/finance/client/{client_id}", params={"month_iso": month_iso}).json()
+    assert fin["confirmedSessionsCount"] == 1  # só a confirmada, não a pendente
+
+    batch = {f["clientId"]: f for f in client.get("/finance/clients", params={"month_iso": month_iso}).json()}
+    assert batch[client_id]["confirmedSessionsCount"] == 1
+
+
 def test_client_blocked_after_three_unpaid_sessions():
     resp = client.post(
         "/clients",
