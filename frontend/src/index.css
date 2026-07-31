@@ -2389,13 +2389,9 @@ textarea {
   }
 
   .week-grid {
-    display: block;
+    grid-template-columns: 48px repeat(5, 120px);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-  }
-
-  .week-grid > * {
-    min-width: 640px;
   }
 }
 
