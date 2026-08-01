@@ -173,6 +173,7 @@ class Bill(Base):
     status: Mapped[str] = mapped_column(Text, default="a-pagar")
     series_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_fixed: Mapped[bool] = mapped_column(Boolean, default=False)
+    paid_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

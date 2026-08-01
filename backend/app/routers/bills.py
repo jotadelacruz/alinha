@@ -16,7 +16,7 @@ router = APIRouter(prefix="/bills", tags=["bills"])
 def _to_out(b: Bill) -> BillOut:
     return BillOut(
         id=b.id, name=b.name, category=b.category, amount=float(b.amount), due_date=b.due_date,
-        status=b.status, series_id=b.series_id, is_fixed=b.is_fixed,
+        status=b.status, series_id=b.series_id, is_fixed=b.is_fixed, paid_at=b.paid_at,
     )
 
 
@@ -35,6 +35,7 @@ def create_bill(body: BillCreate, user_id: uuid.UUID = Depends(get_current_user_
     bill = Bill(
         owner_id=user_id, name=body.name, category=body.category, amount=body.amount, due_date=body.due_date,
         status=body.status, series_id=body.series_id, is_fixed=body.is_fixed,
+        paid_at=datetime.datetime.now(datetime.timezone.utc) if body.status == "pago" else None,
     )
     db.add(bill)
     db.commit()
@@ -50,6 +51,7 @@ def update_status(
     if not bill:
         raise HTTPException(404, "Conta não encontrada")
     bill.status = body.status
+    bill.paid_at = datetime.datetime.now(datetime.timezone.utc) if body.status == "pago" else None
     db.commit()
     return {"ok": True}
 

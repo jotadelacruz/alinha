@@ -384,6 +384,40 @@ def test_bill_recurrence_and_overdue_status():
     assert len(aluguel_bills) >= 2
 
 
+def test_bill_paid_at_set_when_marked_paid_and_cleared_when_reverted():
+    """Financeiro > Histórico de contas fixas: marcar uma conta como paga registra
+    quando isso aconteceu (não só que aconteceu) — ver bills.py update_status."""
+    future_due = (datetime.date.today() + datetime.timedelta(days=15)).isoformat()
+    resp = client.post(
+        "/bills",
+        json={
+            "name": "Internet",
+            "category": "Internet",
+            "amount": 120,
+            "dueDate": future_due,
+            "status": "a-pagar",
+            "isFixed": True,
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    bill_id = resp.json()["id"]
+    assert resp.json()["paidAt"] is None
+
+    resp = client.patch(f"/bills/{bill_id}/status", json={"status": "pago"})
+    assert resp.status_code == 200, resp.text
+
+    bills = client.get("/bills").json()
+    updated = next(b for b in bills if b["id"] == bill_id)
+    assert updated["status"] == "pago"
+    assert updated["paidAt"] is not None
+
+    resp = client.patch(f"/bills/{bill_id}/status", json={"status": "a-pagar"})
+    assert resp.status_code == 200, resp.text
+    bills = client.get("/bills").json()
+    reverted = next(b for b in bills if b["id"] == bill_id)
+    assert reverted["paidAt"] is None
+
+
 def test_prontuario_password_set_and_verify():
     resp = client.post("/profile/prontuario-password", json={"password": "segredo123"})
     assert resp.status_code == 200, resp.text

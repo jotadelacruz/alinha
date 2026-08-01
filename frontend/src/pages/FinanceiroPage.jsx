@@ -11,6 +11,10 @@ function fmtBRL(v) {
   return (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function fmtPaidAt(iso) {
+  return iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
+}
+
 const STATUS_LABEL = { pago: 'Pago', parcial: 'Parcial', aberto: 'Em aberto' };
 
 const BILL_CATEGORIES = [
@@ -162,6 +166,10 @@ export default function FinanceiroPage() {
     await api.delete(`/bills/${bill.id}`);
     await loadAll();
   }
+
+  const fixedBillsPaid = bills
+    .filter((b) => b.isFixed && b.status === 'pago')
+    .sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt));
 
   return (
     <div>
@@ -448,33 +456,67 @@ export default function FinanceiroPage() {
       )}
 
       {tab === 'historico' && (
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Data</th>
-              <th>Forma</th>
-              <th>Valor</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((t) => {
-              const client = clients.find((c) => c.id === t.clientId);
-              return (
-                <tr key={t.id}>
-                  <td>{client ? client.name : 'Cliente removido'}</td>
-                  <td>{formatBR(t.paymentDate)}</td>
-                  <td>{t.paymentMethod}</td>
-                  <td>{fmtBRL(t.amount)}</td>
-                  <td>
-                    <button onClick={() => handleDeleteTransaction(t.id)}>Excluir</button>
+        <>
+          <h3 style={{ fontSize: 15, marginBottom: 12 }}>Recebimentos de clientes</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Data</th>
+                <th>Forma</th>
+                <th>Valor</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((t) => {
+                const client = clients.find((c) => c.id === t.clientId);
+                return (
+                  <tr key={t.id}>
+                    <td>{client ? client.name : 'Cliente removido'}</td>
+                    <td>{formatBR(t.paymentDate)}</td>
+                    <td>{t.paymentMethod}</td>
+                    <td>{fmtBRL(t.amount)}</td>
+                    <td>
+                      <button onClick={() => handleDeleteTransaction(t.id)}>Excluir</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          <h3 style={{ fontSize: 15, margin: '28px 0 12px' }}>Histórico de contas fixas</h3>
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Nome</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Pago em</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fixedBillsPaid.map((b) => (
+                <tr key={b.id}>
+                  <td>{CATEGORY_ICONS[b.category] || '📦'}</td>
+                  <td>{b.name}</td>
+                  <td>{formatBR(b.dueDate)}</td>
+                  <td>{fmtBRL(b.amount)}</td>
+                  <td>{fmtPaidAt(b.paidAt)}</td>
+                </tr>
+              ))}
+              {fixedBillsPaid.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', color: 'var(--ink-soft)' }}>
+                    Nenhuma conta fixa paga ainda.
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </>
       )}
     </div>
   );

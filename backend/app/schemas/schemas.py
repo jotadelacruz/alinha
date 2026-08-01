@@ -249,6 +249,7 @@ class BillCreate(BillBase):
 
 class BillOut(BillBase):
     id: uuid.UUID
+    paid_at: datetime.datetime | None = None
 
 
 class BillStatusUpdate(CamelModel):
