@@ -220,6 +220,8 @@ class FinanceSummaryOut(CamelModel):
     total_aberto: float
     total_sessoes: int
     ticket_medio: float
+    total_saidas: float
+    lucro_liquido: float
 
 
 # ---------- Client credits ----------

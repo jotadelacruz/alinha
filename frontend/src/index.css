@@ -530,6 +530,10 @@ table {
   margin-bottom: 24px;
 }
 
+.kpi-row-6 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .kpi-card {
   background: var(--white);
   border: 1px solid var(--line);
@@ -547,6 +551,10 @@ table {
   font-weight: 700;
   color: var(--ink);
   margin-top: 8px;
+}
+
+.kpi-card strong.negative {
+  color: var(--alert);
 }
 
 /* ---------- Tables ---------- */

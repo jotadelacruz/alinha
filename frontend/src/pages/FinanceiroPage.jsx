@@ -177,7 +177,7 @@ export default function FinanceiroPage() {
       {error && <p className="error">{error}</p>}
 
       {summary && (
-        <div className="kpi-row">
+        <div className="kpi-row kpi-row-6">
           <div className="kpi-card">
             <div>Recebido no mês</div>
             <strong>{fmtBRL(summary.totalRecebido)}</strong>
@@ -185,6 +185,14 @@ export default function FinanceiroPage() {
           <div className="kpi-card">
             <div>Em aberto</div>
             <strong>{fmtBRL(summary.totalAberto)}</strong>
+          </div>
+          <div className="kpi-card">
+            <div>Saídas do mês</div>
+            <strong>{fmtBRL(summary.totalSaidas)}</strong>
+          </div>
+          <div className="kpi-card">
+            <div>Lucro líquido</div>
+            <strong className={summary.lucroLiquido < 0 ? 'negative' : ''}>{fmtBRL(summary.lucroLiquido)}</strong>
           </div>
           <div className="kpi-card">
             <div>Sessões</div>

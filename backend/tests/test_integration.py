@@ -360,6 +360,41 @@ def test_finance_summary_returns_camel_case():
     assert "total_recebido" not in body
 
 
+def test_finance_summary_includes_saidas_and_lucro_liquido():
+    """Dashboard do Financeiro: saídas do mês = total de contas a pagar do mês;
+    lucro líquido = entradas (recebido) - saídas."""
+    month_iso = datetime.date.today().replace(day=1).isoformat()
+
+    resp = client.post(
+        "/clients",
+        json={"name": "Cliente Lucro", "value": 300, "day": "-", "time": "-", "status": "ativo"},
+    )
+    client_id = resp.json()["id"]
+    client.put(
+        "/payments", json={"clientId": client_id, "referenceMonthIso": month_iso, "sessions": 1, "status": "aberto"}
+    )
+    client.post(
+        "/payment-transactions",
+        json={
+            "clientId": client_id,
+            "referenceMonthIso": month_iso,
+            "amount": 300,
+            "paymentDate": datetime.date.today().isoformat(),
+            "paymentMethod": "PIX",
+        },
+    )
+
+    resp = client.post(
+        "/bills",
+        json={"name": "Aluguel Teste Lucro", "category": "Aluguel", "amount": 120, "dueDate": month_iso, "status": "a-pagar"},
+    )
+    assert resp.status_code == 200, resp.text
+
+    summary = client.get("/finance/summary", params={"month_iso": month_iso}).json()
+    assert summary["totalSaidas"] >= 120
+    assert summary["lucroLiquido"] == summary["totalRecebido"] - summary["totalSaidas"]
+
+
 def test_bill_recurrence_and_overdue_status():
     past_due = (datetime.date.today() - datetime.timedelta(days=5)).isoformat()
     resp = client.post(

@@ -4,9 +4,10 @@ import datetime
 import math
 import uuid
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.models import Appointment, Client, ClientCredit, Payment, PaymentTransaction, Profile
+from app.models.models import Appointment, Bill, Client, ClientCredit, Payment, PaymentTransaction, Profile
 
 BLOCK_THRESHOLD_SESSIONS = 3  # fallback quando o perfil não tem preferência salva (ver Profile.unpaid_sessions_block_threshold)
 
@@ -189,11 +190,20 @@ def compute_finance_summary(db: Session, owner_id: uuid.UUID, month_iso: datetim
         total_aberto += fin["balance"]
 
     ticket_medio = round((total_recebido + total_aberto) / total_sessoes) if total_sessoes > 0 else 0
+
+    total_saidas = float(
+        db.query(func.coalesce(func.sum(Bill.amount), 0))
+        .filter(Bill.owner_id == owner_id, Bill.due_date >= month_iso, Bill.due_date < _next_month(month_iso))
+        .scalar()
+    )
+
     return {
         "total_recebido": total_recebido,
         "total_aberto": total_aberto,
         "total_sessoes": total_sessoes,
         "ticket_medio": ticket_medio,
+        "total_saidas": total_saidas,
+        "lucro_liquido": total_recebido - total_saidas,
     }
 
 
